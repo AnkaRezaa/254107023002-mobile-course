@@ -12,6 +12,8 @@ Data yang digunakan:
 - Status: Aktif
 - Email: null/belum diisi
 
+
+
 Contoh tampilan informasi:
 
 ![Tampilan profil mahasiswa](screenshot/hasilLatihanMandiri.jpg)
@@ -42,6 +44,14 @@ Hasil dengan widget
 - [x] Source code dan README telah disiapkan untuk repository.
 - [x] Screenshot aplikasi ditambahkan ke repository.
 - [x] Repository telah di-push ke remote repository.
+
+## gambar dari checklist 
+
+flutter doctor
+![hasil flutter doctor](screenshot/Flutter_Doctor.png)
+
+flutter devices
+![hasil flutter devices](screenshot/Flutter_devices.png)
 
 ### Mini Assignment
 
