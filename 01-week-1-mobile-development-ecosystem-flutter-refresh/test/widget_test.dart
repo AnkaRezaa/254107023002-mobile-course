@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:my_first_app/main.dart';
 
-void main() {
+void main() { 
   testWidgets('Menampilkan profil mahasiswa', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
