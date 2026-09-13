@@ -189,6 +189,17 @@ docs berada di [ai_challenge/docs](./ai_challenge/docs)
 - flutter test
 
 
+jawab : 
+
+![Hasil halaman ToDo setelah refactoring](screenshots/hasil-refactoring1.png)
+
+![Hasil halaman Statistik setelah refactoring](screenshots/hasil-refactoring-2.png)
+
+![Hasil testing refactoring](screenshots/hasil-refactoring-testing.png)
+
+
+
+
 # Tugas, refleksi, dan referensi
 
 Mini project / Industry Challenge

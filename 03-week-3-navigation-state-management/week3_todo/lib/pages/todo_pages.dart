@@ -1,48 +1,45 @@
+// lib/pages/todo_pages.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
- import '../providers/todo_providers.dart';
+
+import '../providers/todo_providers.dart';
+import '../widgets/todo_tile.dart';
 
 class TodoPage extends ConsumerWidget {
   const TodoPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todos = ref.watch(todoListProvider);
+    final todos = ref.watch(unfinishedTodoProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ToDo Riverpod')),
-      body:
-          todos.isEmpty
-              ? const Center(child: Text('Belum ada tugas'))
-              : ListView.builder(
-                itemCount: todos.length,
-                itemBuilder:
-                    (context, index) => ListTile(
-                      leading: Checkbox(
-                        value: todos[index].done,
-                        onChanged:
-                            (_) => ref
-                                .read(todoListProvider.notifier)
-                                .toggle(index),
-                      ),
-                      title: Text(
-                        todos[index].title,
-                        style: TextStyle(
-                          decoration:
-                              todos[index].done
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                        ),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed:
-                            () => ref
-                                .read(todoListProvider.notifier)
-                                .remove(index),
-                      ),
-                    ),
-              ),
+      appBar: AppBar(
+        title: const Text('ToDo Riverpod'),
+      ),
+      body: todos.isEmpty
+          ? const Center(
+              child: Text('Belum ada tugas yang belum selesai'),
+            )
+          : ListView.builder(
+              itemCount: todos.length,
+              itemBuilder: (context, index) {
+                final todo = todos[index];
+
+                return TodoTile(
+                  todo: todo,
+                  onToggle: () {
+                    ref
+                        .read(todoListProvider.notifier)
+                        .toggleTodo(todo);
+                  },
+                  onDelete: () {
+                    ref
+                        .read(todoListProvider.notifier)
+                        .removeTodo(todo);
+                  },
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context, ref),
         child: const Icon(Icons.add),
@@ -50,32 +47,46 @@ class TodoPage extends ConsumerWidget {
     );
   }
 
-  void _showAddDialog(BuildContext context, WidgetRef ref) {
+  void _showAddDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     final controller = TextEditingController();
-    showDialog(
+
+    showDialog<void>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Tugas baru'),
-            content: TextField(controller: controller, autofocus: true),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Batal'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  if (controller.text.trim().isNotEmpty) {
-                    ref
-                        .read(todoListProvider.notifier)
-                        .add(controller.text.trim());
-                  }
-                  Navigator.pop(context);
-                },
-                child: const Text('Tambah'),
-              ),
-            ],
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Tugas baru'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Masukkan tugas',
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final title = controller.text.trim();
+
+                if (title.isNotEmpty) {
+                  ref
+                      .read(todoListProvider.notifier)
+                      .add(title);
+                }
+
+                Navigator.pop(context);
+              },
+              child: const Text('Tambah'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
