@@ -120,18 +120,61 @@ Requirements:
 Jelaskan setiap bagian kode dalam komentar.
 
 
-Hasil 
+![hasilAi](screenshots/ai_challenge.png) 
 
 
 
 ### AI Verification Checklist
-1 Apakah state diubah secara immutable (tidak ada state.add() atau mutasi list langsung)?
-2 Apakah ref.watch hanya dipakai di dalam build, dan ref.read di callback?
-3 Apakah ketiga state AsyncValue benar-benar ditangani (bukan hanya success)?
-4 Apakah provider dideklarasikan dengan tipe eksplisit dan tidak duplikat dengan provider lain?
-5 Apakah kode AI memakai API Riverpod versi lama (StateProvider antipattern, StateNotifierProvider usang, atau 6 6 6 Consumer bertingkat yang tidak perlu)? Perbaiki ke pola Notifier/ConsumerWidget.
-7 Jalankan flutter analyze dan flutter test, apakah hasil AI lolos tanpa warning?
+1. Apakah state diubah secara immutable (tidak ada state.add() atau mutasi list langsung)? 
+2. Apakah ref.watch hanya dipakai di dalam build, dan ref.read di callback? 
+3. Apakah ketiga state AsyncValue benar-benar ditangani (bukan hanya success)? 
+4. Apakah provider dideklarasikan dengan tipe eksplisit dan tidak duplikat dengan provider lain? 
+5. Apakah kode AI memakai API Riverpod versi lama (StateProvider antipattern, StateNotifierProvider usang, atau 6 6 6 Consumer bertingkat yang tidak perlu)? Perbaiki ke pola Notifier/ConsumerWidget.
+6. Jalankan flutter analyze dan flutter test, apakah hasil AI lolos tanpa warning?
 
+
+jawab 
+
+- State immutable: ya, tidak ada state.add() atau mutasi list langsung.
+main.dart:26-29
+State hanya diganti dengan:
+Baris 27: state = const AsyncLoading()
+Baris 28: state = await AsyncValue.guard(fetcher)
+
+
+- ref.watch dan ref.read
+main.dart:76-88
+Baris 77: ref.watch(...) di dalam build
+Baris 88: ref.read(...) pada callback Retry
+
+- 3 state AsyncValue
+main.dart:81-108
+Loading: baris 82–83
+Error: baris 84–89
+Success: baris 90–108
+
+- Provider bertipe eksplisit dan tidak duplikat
+main.dart:32-36
+Provider hanya ada satu, yaitu statisticsProvider.
+
+- Menggunakan pola Riverpod modern
+main.dart:17-30
+Menggunakan AsyncNotifier, bukan StateProvider atau StateNotifierProvider.
+
+- ConsumerWidget
+main.dart:71-77
+StatsPage menggunakan ConsumerWidget.
+
+- Unit test notifier
+widget_test.dart:13-59
+Test success: baris 14–39
+Test error: baris 41–58
+
+- Hasil validasi
+flutter analyze: No issues found
+flutter test: All tests passe
+
+docs berada di [ai_challenge/docs](./ai_challenge/docs)
 
 ## Refactoring dan testing
 
