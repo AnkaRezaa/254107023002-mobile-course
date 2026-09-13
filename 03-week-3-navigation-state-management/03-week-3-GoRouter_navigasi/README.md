@@ -55,8 +55,19 @@ Konsep inti Riverpod
 
 ### Praktikum 2 — Aplikasi ToDo dengan Riverpod
 
-Hasil
+#### Hasil pengamatan
 
+![Halaman awal aplikasi ToDo](screenshots/ToDo1.png)
+
+Gambar 1. Halaman awal aplikasi ToDo menampilkan pesan bahwa daftar tugas masih kosong. Tampilan ini menunjukkan state awal aplikasi sebelum ada tugas yang ditambahkan.
+
+![Dialog tambah tugas](screenshots/ToDo2.png)
+
+Gambar 2. Saat tombol tambah ditekan, aplikasi menampilkan dialog untuk memasukkan judul tugas baru. Setelah input diisi dan tombol Tambah ditekan, data tugas akan masuk ke state provider dan tampil pada daftar utama.
+
+![Daftar tugas setelah ditambahkan](screenshots/ToDo3.png)
+
+Gambar 3. Setelah tugas ditambahkan, aplikasi menampilkan daftar tugas dengan opsi checklist untuk menandai tugas selesai dan tombol hapus untuk menghapus item. Perubahan ini terjadi secara reaktif melalui Riverpod saat state berubah.
 
 ## AsyncValue: loading, error, success
 Banyak state berasal dari proses asinkron (membaca database, memanggil API). UI harus menampilkan tiga kemungkinan: loading (proses berjalan), error (gagal), dan success (data siap). Mengelola tiga flag boolean secara manual rawan kesalahan (isLoading dan hasError bisa tidak konsisten).
