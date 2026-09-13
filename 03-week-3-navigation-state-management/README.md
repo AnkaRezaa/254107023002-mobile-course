@@ -17,7 +17,17 @@ Navigasi adalah mekanisme berpindah antar layar. Di Flutter, setiap layar adalah
 
 ### Praktikum 1 — Aplikasi multi-page dengan GoRouter
 
-Hasil
+Jalankan dan amati. Buka item, lalu tekan tombol back sistem. Perhatikan bahwa path berubah mengikuti layar aktif, path yang sama juga dapat diakses langsung tanpa melewati Home. Inilah keunggulan router deklaratif dibanding Navigator 1.0.
+
+#### Hasil pengamatan
+
+![Halaman Home menampilkan daftar item](screenshots/Gorouter1.png)
+
+Gambar 1. Halaman Home menampilkan daftar item. Saat `Item 1` dipilih, aplikasi menavigasi dari path `/` ke path `/detail/1` menggunakan parameter `id`.
+
+![Halaman Detail 1](screenshots/Gorouter2.png)
+
+Gambar 2. Halaman Detail menampilkan item yang dipilih dengan ID `1`. Tombol back sistem mengembalikan pengguna ke halaman Home dan path kembali ke `/`. Halaman ini juga dapat dibuka langsung melalui `/detail/1`, tanpa harus melewati Home, karena route telah didefinisikan oleh GoRouter.
 
 
 ## State management dengan Riverpod
@@ -62,7 +72,7 @@ Riverpod menyediakan AsyncValue<T> yang memodelkan ketiga kondisi tersebut dalam
 3. Tekan tombol Coba lagi, ref.invalidate membuat provider dijalankan ulang. Pulihkan kode, pastikan state success tampil.
 4. Refleksikan: mengapa menampilkan ulang data lama (stale data) dengan indikator refresh kadang lebih baik daripada mengosongkan layar? Kapan pola itu penting?
 
-Hasil 
+Hasil     
 1. 
 2. 
 3. 
