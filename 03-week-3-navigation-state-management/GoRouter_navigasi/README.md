@@ -204,13 +204,13 @@ Bangun aplikasi ToDo dengan navigasi dan Riverpod sebagai tugas minggu ini:
 ## Refleksi
 
 1. Kapan setState masih cukup, dan kapan state harus naik ke Riverpod?
-jawab :
+jawab : `setState` masih cukup untuk state lokal yang hanya digunakan oleh satu widget, misalnya membuka atau menutup komponen sementara. State sebaiknya dikelola Riverpod ketika dipakai oleh beberapa widget atau halaman, perlu dipisahkan dari UI, membutuhkan logika terpusat, atau ingin diuji secara independen. Pada aplikasi ToDo, daftar tugas dikelola Riverpod karena dibaca dan diubah oleh beberapa bagian UI.
 
 2. Apa perbedaan context.go dan context.push, dan kapan masing-masing tepat digunakan?
-jawab : 
+jawab : `context.go` berpindah ke lokasi baru dan mengganti stack navigasi yang aktif, sehingga tepat untuk perpindahan utama seperti dari `/` ke `/stats` pada `NavigationBar` atau redirect setelah login. `context.push` menambahkan route baru di atas route saat ini, sehingga tepat untuk halaman detail atau alur yang perlu kembali ke halaman sebelumnya dengan tombol back.
 
 3. Bagaimana AsyncValue mencegah bug dibanding tiga boolean terpisah?
-jawab :
+jawab : `AsyncValue` menggabungkan kondisi loading, error, dan data sukses dalam satu state yang saling konsisten. Dengan tiga boolean terpisah, kombinasi yang tidak valid dapat terjadi, misalnya `isLoading` dan `hasError` sama-sama bernilai `true` atau tidak ada flag yang menunjukkan data sukses. Pola `AsyncValue.when` memaksa UI menangani setiap kemungkinan secara jelas dan mengurangi percabangan state yang tidak sinkron.
 
 4. Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?
-jawab :
+jawab : Saya memperbaiki pengelolaan pengambilan data agar fungsi fetcher dapat di-override pada unit test, sehingga test tidak menunggu delay dua detik dan tidak bergantung pada hasil acak. Saya juga memastikan peluang error menggunakan angka acak sebesar 30 persen, state retry memakai `AsyncLoading` dan `AsyncValue.guard`, serta UI menangani loading, error dengan tombol retry, dan success. Perbaikan ini membuat kode lebih mudah diuji, lebih sesuai pola Riverpod modern, dan lebih aman terhadap state yang tidak konsisten.
