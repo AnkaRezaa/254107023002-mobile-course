@@ -83,11 +83,24 @@ Riverpod menyediakan AsyncValue<T> yang memodelkan ketiga kondisi tersebut dalam
 3. Tekan tombol Coba lagi, ref.invalidate membuat provider dijalankan ulang. Pulihkan kode, pastikan state success tampil.
 4. Refleksikan: mengapa menampilkan ulang data lama (stale data) dengan indikator refresh kadang lebih baik daripada mengosongkan layar? Kapan pola itu penting?
 
-Hasil     
-1. 
-2. 
-3. 
-4. 
+#### Hasil pengamatan
+
+![Loading state AsyncValue](screenshots/praktikum3_1.png)
+
+Gambar 1. Saat provider pertama kali dijalankan, aplikasi menampilkan indikator loading selama 2 detik sebelum data ditampilkan. Ini membuktikan bahwa state asinkron ditangani dengan `AsyncLoading` sebelum data siap.
+
+![Error state AsyncValue](screenshots/praktikum3_2.png)
+
+Gambar 2. Saat `build()` sengaja melempar exception, UI beralih ke state error dan menampilkan pesan `Gagal memuat` serta tombol `Coba lagi`. Hal ini menunjukkan bahwa error ditangani dengan `AsyncError` dan tidak membuat aplikasi crash.
+
+![Success state AsyncValue](screenshots/praktikum3_3.png)
+
+![Loading state AsyncValue](screenshots/praktikum3_1.png) 
+
+Gambar 3. Setelah tombol coba lagi ditekan, provider dijalankan ulang dan state berubah menjadi success. Data produk berhasil ditampilkan dalam daftar dengan format yang rapi.
+
+
+4. Menampilkan data lama dengan indikator refresh lebih baik daripada mengosongkan layar karena pengguna tetap memiliki konteks dan tidak merasa aplikasi hilang atau tidak responsif saat proses re-fetch sedang berjalan. Pola ini sangat penting pada aplikasi yang sering berinteraksi dengan jaringan, misalnya daftar produk, dashboard, notifikasi, dan tugas harian. Dengan `AsyncValue`, kita dapat menjaga UI tetap stabil sambil memberi tahu pengguna bahwa data sedang diperbarui.
 
 
 
