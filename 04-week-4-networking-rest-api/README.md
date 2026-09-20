@@ -59,4 +59,60 @@ Data halaman kedua, yaitu post nomor 11 sampai 20, ditambahkan ke bawah data
 sebelumnya. Proses ini berlangsung tanpa reload penuh pada aplikasi.
 
 
+# AI Challenge
 
+## AI Prompt Challenge
+
+" Buatkan repository layer Flutter untuk endpoint GET /comments?postId={id}
+dari JSONPlaceholder menggunakan Dio + flutter_riverpod.
+Requirements:
+- Model Comment dengan fromJson aman null (postId, id, name, email, body).
+- CommentRepository dengan method fetchComments(postId) + timeout 10 detik.
+- AsyncNotifierProvider dengan penanganan error otomatis (AsyncError)
+  dan fungsi pesan error
+  ramah pengguna untuk timeout, connection error, 404, dan 500.
+- Satu unit test untuk fromJson dengan field yang hilang.
+Jelaskan setiap bagian kode dalam komentar. " 
+
+# AI verification check
+1. **UI memanggil Dio langsung?**  
+   Tidak. UI menggunakan `commentsProvider`, lalu provider memanggil `CommentRepository`. Dio hanya digunakan di repository.
+
+2. **`fromJson` aman null?**  
+   Ya. Field hilang/null menggunakan nilai default:
+   - Angka: `0`
+   - Teks: `''`
+
+3. **Apakah semua error Dio dipetakan?**    Ya:
+   - Timeout: pesan koneksi timeout
+   - `connectionError`: pesan gagal terhubung
+   - `404`: komentar tidak ditemukan
+   - `500`: server bermasalah
+   - Error lain: pesan jaringan umum
+
+4. **Apakah `baseUrl` dan timeout terpusat?**  
+   Ya. Keduanya berada di `api_client.dart` melalui `BaseOptions`:
+   - `baseUrl`
+   - `connectTimeout: 10 detik`
+   - `receiveTimeout: 10 detik`
+
+5. **Apakah test menguji field hilang?**  
+   Ya. comment_test.dart menguji `Comment.fromJson({})` dan memastikan semua nilai default digunakan.
+
+6. **Apakah `flutter analyze` dan `flutter test` lolos?**  
+   Ya:
+
+```text
+flutter analyze
+No issues found!
+
+flutter test
+All tests passed!
+```
+
+**Kesimpulan:** kode AI diterima karena pemisahan repository sudah benar,
+parsing JSON aman terhadap field yang hilang, error jaringan memiliki pesan
+yang sesuai, dan seluruh analyzer serta test berhasil tanpa issue.
+
+Dokumentasi prompt, output awal AI, perbaikan, penjelasan kode, dan hasil testing:
+[docs/ai-development-log.md](docs/ai-development-log.md)

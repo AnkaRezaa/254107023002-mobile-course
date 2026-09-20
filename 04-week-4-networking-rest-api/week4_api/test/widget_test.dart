@@ -5,26 +5,32 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:praktikum/data/paged_posts.dart';
 import 'package:praktikum/main.dart';
 
+// Notifier palsu mencegah smoke test melakukan request HTTP sungguhan.
+class FakePagedPostsNotifier extends PagedPostsNotifier {
+  @override
+  PagedPostsState build() => const PagedPostsState();
+}
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('halaman pagination tampil di dalam ProviderScope',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pagedPostsProvider.overrideWith(FakePagedPostsNotifier.new),
+        ],
+        child: MyApp(),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // Frame pertama sudah harus menampilkan judul halaman pagination.
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Posts Paged'), findsOneWidget);
   });
 }
