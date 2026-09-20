@@ -34,8 +34,29 @@ prak 2 3 status
 Gambar keempat menunjukkan perubahan BaseUrl menjadi URL yang salah.
 
 ![Praktikum 2.3 - Status error setelah Base URL salah](screenshots/prak2_3status.jpg)
-Gambar kelima menunjukkan pesan error karena server tidak dapat ditemukan.
+Gambar kelima menunjukkan pesan error karena server tidak dapat ditemukan.y
 
+
+# Praktikum 3 : Pagination dasar
+
+Pagination membagi data API menjadi beberapa halaman agar data tidak dimuat sekaligus.
+Saat pengguna mendekati bagian bawah list, aplikasi mengambil halaman berikutnya
+dan menambahkan data baru tanpa menghapus data yang sudah tampil.
+
+![Praktikum 3 - Konsep pagination](screenshots/prak3_1.jpg)
+
+Gambar di atas menunjukkan halaman pagination dengan indikator loading di bagian
+bawah list saat halaman berikutnya sedang dimuat.
+
+![Praktikum 3 - Halaman pertama](screenshots/prak3_2page1.jpg)
+
+Halaman pertama menampilkan data post nomor 1 sampai 10. Setelah list digeser
+mendekati bagian bawah, aplikasi mengirim request untuk mengambil halaman kedua.
+
+![Praktikum 3 - Halaman kedua](screenshots/prak3_2page2.jpg)
+
+Data halaman kedua, yaitu post nomor 11 sampai 20, ditambahkan ke bawah data
+sebelumnya. Proses ini berlangsung tanpa reload penuh pada aplikasi.
 
 
 
