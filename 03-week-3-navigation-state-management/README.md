@@ -1,4 +1,4 @@
-# 02 Week 2 - Declarative UI & Responsive Design
+# 03-week-3-navigation-state-management
 pada pertemuan kali ini saya akan mempelajari tentang konsep navigasi,route dan perbedaan navigator1 dengan gorouter, kemudian menerapkan navigasi multi page dengan GoRouter, termasuk passing argument dan deeplink sederhana, selain itu disini akan dijelaskan cara kerja Riverpod (Provider, ConsumerWidget, Notifier), dan  AsyncValue untuk menangani state loading, error, dan success pada UI
 
 # Konsep navigasi dan GoRouter
