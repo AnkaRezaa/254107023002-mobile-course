@@ -139,3 +139,26 @@ flutter test
 00:03 +6: All tests passed!
 ```
 
+2. Pindahkan friendlyErrorMessage ke file lib/data/network_errors.dart agar bisa dipakai ulang halaman paged dan non-paged.
+
+Implementasi:
+
+- Fungsi `friendlyErrorMessage` dipindahkan ke `week4_api/lib/data/network_errors.dart`.
+- `post_list_page.dart` mengimpor `../data/network_errors.dart` untuk menangani
+   error pada halaman non-paged.
+- `paged_post_page.dart` mengimpor file yang sama untuk menangani error pagination.
+- Fungsi ini memetakan timeout, connection error, status 404, status 500, dan
+   error jaringan lainnya menjadi pesan yang mudah dipahami pengguna.
+- Fungsi lama di `providers.dart` dihapus agar tidak terjadi duplikasi.
+
+Hasil validasi:
+
+```text
+flutter analyze
+No issues found!
+
+flutter test
+00:02 +6: All tests passed!
+```
+
+
