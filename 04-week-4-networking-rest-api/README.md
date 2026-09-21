@@ -220,7 +220,100 @@ Gambar ini menunjukkan halaman `Post Detail` yang menampilkan `title` dan `body`
 lengkap dari post yang dipilih.
 
 
+# Mini project / Industry Challenge
+
+Mini project ini merupakan pengembangan dari project Flutter yang sudah dibuat
+sebelumnya. Fitur daftar post dan struktur dasar aplikasi dipertahankan, lalu
+dikembangkan dengan pengelolaan data REST API yang lebih terstruktur.
+
+## Fitur yang Dipertahankan
+
+- Menampilkan daftar data post dari JSONPlaceholder `/posts`.
+- Menggunakan Dio untuk request HTTP.
+- Menggunakan Riverpod untuk state management.
+- Menampilkan state loading, error, empty, dan success.
+
+## Fitur yang Ditambahkan
+
+- Repository layer agar UI tidak memanggil Dio secara langsung.
+- Model `Post` dengan `fromJson` yang aman terhadap field null atau hilang.
+- Konfigurasi Dio terpusat, meliputi `baseUrl`, timeout, dan interceptor logging.
+- Error handling dengan pesan yang lebih mudah dipahami dan tombol retry.
+- Pagination server dengan 10 data per halaman menggunakan `_page` dan `_limit`.
+- Infinite scroll dengan guard untuk mencegah request ganda.
+- Widget reusable `PostTile` untuk menampilkan satu baris post.
+- Pemisahan helper error ke `lib/data/network_errors.dart`.
+- Halaman detail post dengan route `/post/:id` menggunakan GoRouter.
+- State detail mengambil data dari list yang sudah dimuat atau repository jika
+   post dibuka langsung melalui route.
+- Unit test model dan provider menggunakan repository palsu.
+
+## Stack Teknologi
+
+- Flutter dan Dart
+- Dio
+- flutter_riverpod
+- GoRouter
+- JSONPlaceholder REST API
+- flutter_test
+
+## Cara Menjalankan
+
+Jalankan perintah berikut dari folder `week4_api`:
+
+```powershell
+flutter pub get
+flutter run
+```
+
+Untuk memeriksa kualitas kode dan menjalankan test:
+
+```powershell
+flutter analyze
+flutter test
+```
+
+## Hasil yang Dicapai
+
+Aplikasi berhasil menampilkan daftar post dari REST API, memuat data berikutnya
+saat pengguna melakukan scroll, menampilkan detail post, menangani kegagalan
+koneksi, dan mempertahankan data lama saat proses pagination mengalami error.
+Validasi akhir menunjukkan analyzer tidak memiliki issue dan seluruh test lulus.
 
 
+# Refleksi
+1. Mengapa UI dilarang memanggil Dio langsung? Apa yang rusak jika aturan ini dilanggar?
+ Jawab : karena UI hanya bertanggung jawab menampilkan data dan menerima interaksi pengguna.
+ jika Ui memanggil dio langsung maka akibatnya : 
+- Sulit melakukan perubahan baseUrl dan timeout.
+- Penanganan error menjadi tidak konsisten.
+- Widget sulit diuji tanpa koneksi internet.
+- Terjadi duplikasi kode.
+- UI menjadi bergantung langsung pada library Dio.
 
+2. Kapan pagination client-side cukup, dan kapan harus mengandalkan pagination server (_page/_limit)?
+jawab : pagination client side cukup jika jumlah data kecil dan seluruh data aman untuk dimuat sekaligus. Pagination server lebih tepat jika data sangat banyak
+
+3. Bagaimana exception repository berubah menjadi AsyncError tanpa try/catch di setiap widget? Kapan try/catch eksplisit tetap dibutuhkan?
+jawab : AsyncNotifier menjalankan method build() secara asynchronous. Jika repository melempar exception, Riverpod secara otomatis menyimpan exception tersebut ke dalam state AsyncError.
+try/catch eksplisit tetap diperlukan jika aplikasi ingin:
+- Mengubah state secara manual.
+- Menyimpan data lama saat request berikutnya gagal.
+- Menampilkan retry khusus.
+- Menjalankan logging atau tindakan tambahan.
+- Menangani beberapa jenis exception secara berbeda.
+
+4. Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?
+
+jawab :
+Pada hasil awal AI Challenge, struktur model, repository, provider, dan unit test sudah dibuat. Namun, beberapa bagian perlu diperbaiki setelah disesuaikan dengan project:
+
+- fromJson dipastikan aman ketika field JSON hilang atau bernilai null, sehingga aplikasi  tidak mengalami crash.
+- friendlyErrorMessage dipindahkan ke lib/data/network_errors.dart agar dapat digunakan     kembali oleh halaman paged dan non-paged.
+- Provider disesuaikan dengan versi Riverpod yang digunakan dalam project.
+- Test ditambahkan untuk menguji kondisi edge case ketika semua field JSON hilang.
+- Test widget bawaan Flutter yang masih menguji counter diganti agar sesuai dengan halaman pagination.
+- Test widget menggunakan ProviderScope dan fake notifier supaya tidak melakukan request API sungguhan.
+- Import package diperbaiki agar konsisten dengan nama package praktikum.
+- Timeout dan baseUrl dipastikan tetap menggunakan konfigurasi Dio terpusat.
 
