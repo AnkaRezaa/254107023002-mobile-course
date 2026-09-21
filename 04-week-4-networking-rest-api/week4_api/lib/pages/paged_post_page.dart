@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/paged_posts.dart';
 import '../data/network_errors.dart';
 import '../widgets/post_tile.dart';
+import 'package:go_router/go_router.dart';
 
 
 class PagedPostPage extends ConsumerStatefulWidget {
@@ -77,7 +78,12 @@ class _PagedPostPageState
             );
           }
           final post = state.items[index];
-          return PostTile(post: post);
+          return PostTile(
+  post: post,
+  onTap: () {
+    context.push('/post/${post.id}');
+  },
+);
         },
       ),
     );

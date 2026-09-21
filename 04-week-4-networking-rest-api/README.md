@@ -161,4 +161,66 @@ flutter test
 00:02 +6: All tests passed!
 ```
 
+3. Tambahkan halaman detail post dengan GoRouter (`/post/:id`).
+
+Dependency `go_router` ditambahkan pada `week4_api/pubspec.yaml` sejajar dengan
+dependency `dio` dan `flutter_riverpod`:
+
+```yaml
+dependencies:
+   dio: ^5.11.1
+   flutter_riverpod: ^3.4.3
+   go_router: ^16.3.0
+```
+
+Dependency dipasang dengan perintah:
+
+```powershell
+flutter pub get
+```
+
+Hasilnya:
+
+```text
+Got dependencies!
+```
+
+Pesan bahwa beberapa package memiliki versi lebih baru bukan error. Versi yang
+digunakan tetap mengikuti batasan dependency pada `pubspec.yaml`.
+
+Implementasi halaman detail:
+
+- Route `/post/:id` ditambahkan menggunakan GoRouter di `lib/main.dart`.
+- `PostTile` membuka detail dengan `context.push('/post/${post.id}')`.
+- `PostDetailPage` menampilkan `title` dan `body` lengkap.
+- `post_detail.dart` mencari post dari list yang sudah dimuat terlebih dahulu.
+- Jika post belum tersedia di list, data diambil melalui repository dengan
+   endpoint `/posts/{id}`.
+- Halaman detail menangani state loading, error, dan data.
+
+Pengujian manual dilakukan dengan menekan salah satu baris post. Aplikasi harus
+membuka halaman `Post Detail`, menampilkan isi lengkap post, dan tombol kembali
+Android mengembalikan pengguna ke daftar post.
+
+Bukti tampilan:
+
+![Detail post - kondisi error koneksi](screenshots/refactoring1.jpg)
+
+Gambar ini menunjukkan state error ketika aplikasi tidak dapat terhubung ke
+server dan menyediakan tombol `Coba lagi`.
+
+![Daftar post sebelum membuka detail](screenshots/refactoring2.jpg)
+
+Gambar ini menunjukkan daftar post yang berhasil dimuat. Pengguna dapat menekan
+salah satu baris post untuk membuka halaman detail.
+
+![Halaman detail post](screenshots/refactoring3.jpg)
+
+Gambar ini menunjukkan halaman `Post Detail` yang menampilkan `title` dan `body`
+lengkap dari post yang dipilih.
+
+
+
+
+
 
