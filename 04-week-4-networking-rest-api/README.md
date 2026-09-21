@@ -116,3 +116,26 @@ yang sesuai, dan seluruh analyzer serta test berhasil tanpa issue.
 
 Dokumentasi prompt, output awal AI, perbaikan, penjelasan kode, dan hasil testing:
 [docs/ai-development-log.md](docs/ai-development-log.md)
+
+
+# Refactoring dan testing
+
+1. Ekstrak widget baris post menjadi PostTile tersendiri agar ListView.builder pendek dan mudah diuji.
+
+Implementasi:
+
+- Widget `PostTile` dibuat di `week4_api/lib/widgets/post_tile.dart`.
+- Widget ini menerima object `Post` melalui parameter `post`.
+- Tampilan nomor post, judul, dan body dipusatkan di dalam `PostTile`.
+- `post_list_page.dart` dan `paged_post_page.dart` menggunakan `PostTile` di
+   dalam `ListView.builder`, sehingga kode builder menjadi lebih pendek.
+- Pemisahan ini membuat widget baris post lebih mudah digunakan ulang dan diuji
+   secara terpisah.
+
+Hasil pengujian setelah refactoring:
+
+```text
+flutter test
+00:03 +6: All tests passed!
+```
+
