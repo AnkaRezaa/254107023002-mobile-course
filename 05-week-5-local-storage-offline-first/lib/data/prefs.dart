@@ -7,19 +7,19 @@ class PrefsRepository {
 
 Future<bool> getDarkMode() async {
 
-final prefs = await Sharedpreferences.getIntance();
+final prefs = await SharedPreferences.getInstance();
 return prefs.getBool(_darkModeKey) ?? false;
 }
 
 Future<void> setDarkMode(bool value) async {
-  final prefs = await SharedPreferences.getIntance();
+  final prefs = await SharedPreferences.getInstance();
   await prefs.setBool(_darkModeKey, value);
 
 }
 
 Future<void> markOpenedNow() async{
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_lastOpenedKey,DateTime.now()..toIso8601String());
+  await prefs.setString(_lastOpenedKey,DateTime.now().toIso8601String());
 }
 
 Future<String?> getLastOpened() async {
