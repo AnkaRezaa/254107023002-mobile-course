@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'local/note.dart';
 import 'network_provider.dart' as network;
+import 'sync.dart' as sync;
 
 final notesProvider =
     AsyncNotifierProvider<NotesNotifier, List<Note>>(NotesNotifier.new);
@@ -32,7 +33,7 @@ Future<void> syncNotes() async {
   final repository = ref.read(network.noteRepositoryProvider);
   final forceOffline = ref.read(network.forceOfflineProvider);
 
-  await network.syncNotes(repository, forceOffline: forceOffline);
+await sync.syncNotes(repository, forceOffline: forceOffline);
   await _reloadNotes();
 }
 

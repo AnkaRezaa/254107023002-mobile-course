@@ -1,30 +1,76 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:week5_local_storage/data/local/note.dart';
+import 'package:week5_local_storage/data/notes_provider.dart';
+import 'package:week5_local_storage/data/network_provider.dart';
+import 'package:week5_local_storage/data/repositories/note_repository.dart';
 
-import 'package:week5_local_storage/main.dart';
+class FakeNoteRepository extends NoteRepository {
+  FakeNoteRepository({this.items = const [], this.throwError = false})
+      : super(openDb: () => throw UnimplementedError());
+
+  final List<Note> items;
+  final bool throwError;
+
+  @override
+  Future<List<Note>> fetchNotes() async {
+    if (throwError) throw Exception('db locked (simulasi)');
+    return items;
+  }
+
+  @override
+  Future<int> countDirty() =>
+      Future.value(items.where((n) => n.dirty).length);
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('fromMap aman terhadap field yang hilang', () {
+    final note = Note.fromMap({'title': 'Belanja'});
+    expect(note.title, 'Belanja');
+    expect(note.body, '');
+    expect(note.dirty, isFalse);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  test('flag dirty bertahan pada serialisasi', () {
+    final note = Note(
+      title: 'a',
+      updatedAt: DateTime(2026, 9, 18),
+      dirty: true,
+    );
+    final restored = Note.fromMap(note.toMap());
+    expect(restored.dirty, isTrue);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('provider sukses dengan repository palsu', () async {
+    final container = ProviderContainer(
+        retry: (retryCount, error) => null,
+      overrides: [
+        noteRepositoryProvider.overrideWithValue(
+          FakeNoteRepository(items: [
+            Note(title: 'Tes', updatedAt: DateTime.now()),
+          ]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final notes = await container.read(notesProvider.future);
+    expect(notes.length, 1);
+    expect(notes.first.title, 'Tes');
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('provider error dengan repository palsu', () async {
+    final container = ProviderContainer(
+      retry: (retryCount, error) => null,
+      overrides: [
+        noteRepositoryProvider.overrideWithValue(
+          FakeNoteRepository(throwError: true),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await expectLater(
+      container.read(notesProvider.future),
+      throwsA(isA<Exception>()),
+    );
   });
 }
