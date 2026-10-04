@@ -11,6 +11,7 @@ import 'pages/announcement_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  registerBackgroundHandler();
   await initLocalNotifications();
   await requestNotificationPermission();
 
@@ -41,11 +42,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/login',
-        builder: (_, __) => const LoginPage(),
+        builder: (_, _) => const LoginPage(),
       ),
       GoRoute(
         path: '/',
-        builder: (_, __) => const HomePage(),
+        builder: (_, _) => const HomePage(),
       ),
       GoRoute(
         path: '/pengumuman/:id',
@@ -71,19 +72,28 @@ class _CampusNotifyAppState extends ConsumerState<CampusNotifyApp> {
     _setupFCM();
   }
 
-  Future<void> _setupFCM() async {
-    await initFcmToken(
-      onToken: (token) async {
-        debugPrint('====================================');
-        debugPrint('FCM TOKEN DITERIMA:');
-        debugPrint(token);
-        debugPrint('====================================');
-        if (mounted) {
-          ref.read(fcmTokenProvider.notifier).setToken(token);
-        }
-      },
-    );
-  }
+Future<void> _setupFCM() async {
+  // Dengarkan saat notifikasi diklik (Foreground banner & Background)
+  listenForeground((route) {
+    ref.read(routerProvider).push(route);
+  });
+
+  
+  // Periksa apakah aplikasi dibuka dari kondisi mati (Terminated)
+  await handleTerminated((route) {
+    ref.read(routerProvider).push(route);
+  });
+  // Ambil token FCM dan simpan
+ await initFcmToken(
+  onToken: (token) async {
+    debugPrint('FCM TOKEN DITERIMA: $token');
+    if (mounted) {
+      ref.read(fcmTokenProvider.notifier).setToken(token);
+    }
+  },
+);
+
+}
 
   @override
   Widget build(BuildContext context) {
