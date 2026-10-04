@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import 'package:dio/dio.dart';
+import '../data/api_errors.dart';
+
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -21,21 +24,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    try {
-      await ref.read(authStateProvider.notifier).login(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
-          );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login Gagal: $e')),
+ Future<void> _submit() async {
+  if (!_formKey.currentState!.validate()) return;
+  try {
+    await ref.read(authStateProvider.notifier).login(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
         );
-      }
+  } catch (e) {
+    String errorMessage = 'Terjadi kesalahan saat masuk';
+    if (e is DioException) {
+      errorMessage = mapDioExceptionToMessage(e);
+    } else if (e is Exception) {
+      errorMessage = e.toString().replaceAll('Exception: ', '');
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -135,3 +145,4 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
+

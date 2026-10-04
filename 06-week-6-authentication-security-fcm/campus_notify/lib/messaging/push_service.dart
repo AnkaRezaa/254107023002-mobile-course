@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../routes.dart';
+
 
 // ============================================================================
 // ⚠️ BAGIAN YANG TIDAK BOLEH MENGAKSES BuildContext (Isolate Terpisah)
@@ -175,7 +177,7 @@ class PushService {
       debugPrint('[FCM Foreground] Pesan masuk: ${message.notification?.title}');
 
       final notification = message.notification;
-      final route = message.data['route'] ?? '/';
+      final route = routeFromMessage(message.data);
 
       if (notification != null) {
         // Android Notification Channel (Wajib untuk Android 8.0+)
