@@ -24,7 +24,7 @@ void main() async {
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = ValueNotifier<bool>(false);
   ref.listen(authStateProvider, (_, next) {
-    authNotifier.value = next.value ?? false;
+  authNotifier.value = next.value ?? false;
   });
 
   return GoRouter(
