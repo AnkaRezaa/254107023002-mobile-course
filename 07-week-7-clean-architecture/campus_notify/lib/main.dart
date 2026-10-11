@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import 'messaging/push_service.dart';
-import 'providers/auth_provider.dart';
-import 'pages/login_page.dart';
+import 'features/auth/presentation/providers/auth_providers.dart';
+import 'core/providers.dart';
+import 'features/auth/presentation/pages/login_page.dart';
 import 'pages/home_page.dart';
-import 'pages/announcement_page.dart';
+import 'features/announcements/presentation/pages/announcement_page.dart';
 import 'routes.dart';
+
 
 
 void main() async {
@@ -47,12 +50,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.home,
         builder: (_, _) => const HomePage(),
       ),
-      GoRoute(
+        GoRoute(
         path: AppRoutes.announcement,
-        builder: (_, s) => AnnouncementPage(
-          id: s.pathParameters['id'] ?? '',
-        ),
+        builder: (_, s) => const AnnouncementsPage(),
       ),
+
     ],
   );
 });
