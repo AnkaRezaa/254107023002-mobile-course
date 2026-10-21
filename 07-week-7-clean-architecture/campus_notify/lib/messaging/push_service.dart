@@ -1,10 +1,11 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../routes.dart';
 
+import '../routes.dart';
 
 // ============================================================================
 // ⚠️ BAGIAN YANG TIDAK BOLEH MENGAKSES BuildContext (Isolate Terpisah)
@@ -89,7 +90,7 @@ class PushService {
 
     final isGranted =
         settings.authorizationStatus == AuthorizationStatus.authorized ||
-            settings.authorizationStatus == AuthorizationStatus.provisional;
+        settings.authorizationStatus == AuthorizationStatus.provisional;
 
     debugPrint('[FCM] Status Izin Notifikasi: ${settings.authorizationStatus}');
     return isGranted;
@@ -104,7 +105,9 @@ class PushService {
     // - Android: Butuh nama icon resource (mis. '@mipmap/ic_launcher').
     // - iOS: Menggunakan DarwinInitializationSettings dengan request izin spesifik.
     // ========================================================================
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings();
 
     const initSettings = InitializationSettings(
@@ -132,8 +135,9 @@ class PushService {
       // 1. Ambil token saat ini
       final token = await _fcm.getToken();
       if (token != null) {
-        final masked =
-            token.length > 12 ? '${token.substring(0, 12)}...' : token;
+        final masked = token.length > 12
+            ? '${token.substring(0, 12)}...'
+            : token;
         debugPrint('[FCM] Token Perangkat (Masked): $masked');
         onTokenReceived?.call(token);
         await sendTokenToBackend(token);
@@ -142,8 +146,9 @@ class PushService {
       // 2. Pantau rotasi token (reinstall, clear cache, update keamanan)
       // Wajib ada agar backend tidak menyimpan token basi!
       _fcm.onTokenRefresh.listen((newToken) async {
-        final masked =
-            newToken.length > 12 ? '${newToken.substring(0, 12)}...' : newToken;
+        final masked = newToken.length > 12
+            ? '${newToken.substring(0, 12)}...'
+            : newToken;
         debugPrint('[FCM] Token Diperbarui (Masked): $masked');
         onTokenReceived?.call(newToken);
         await sendTokenToBackend(newToken);
@@ -157,10 +162,10 @@ class PushService {
   Future<void> sendTokenToBackend(String token) async {
     try {
       final platform = Platform.isAndroid ? 'android' : 'ios';
-      await dio.post('/devices', data: {
-        'fcm_token': token,
-        'platform': platform,
-      });
+      await dio.post(
+        '/devices',
+        data: {'fcm_token': token, 'platform': platform},
+      );
       debugPrint('[FCM] Token berhasil disinkronkan ke backend');
     } catch (e) {
       debugPrint('[FCM] Gagal mengirim token ke backend (Mock/Offline): $e');
@@ -174,7 +179,9 @@ class PushService {
     // A. STATE 1: FOREGROUND (Aplikasi sedang aktif dibuka)
     // Sistem OS TIDAK memunculkan banner otomatis -> buat banner manual via local notification
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      debugPrint('[FCM Foreground] Pesan masuk: ${message.notification?.title}');
+      debugPrint(
+        '[FCM Foreground] Pesan masuk: ${message.notification?.title}',
+      );
 
       final notification = message.notification;
       final route = routeFromMessage(message.data);

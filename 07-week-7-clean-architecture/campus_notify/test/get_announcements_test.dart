@@ -11,7 +11,8 @@ class FakeAnnouncementRepository implements AnnouncementRepository {
   final bool fail;
 
   @override
-  Future<({List<Announcement> announcements, Failure? failure})> fetchAnnouncements() async {
+  Future<({List<Announcement> announcements, Failure? failure})>
+  fetchAnnouncements() async {
     if (fail) {
       return (
         announcements: const <Announcement>[],
@@ -31,25 +32,33 @@ class FakeAnnouncementRepository implements AnnouncementRepository {
 }
 
 void main() {
-  test('GetAnnouncements meneruskan daftar pengumuman dari repository', () async {
-    final repo = FakeAnnouncementRepository(items: [
-      Announcement(
-        id: 1,
-        title: 'Pengumuman Akademik',
-        body: 'Jadwal KRS Semester Ganjil',
-        updatedAt: DateTime(2026, 9, 27),
-      ),
-    ]);
-    final result = await GetAnnouncements(repo).call();
-    expect(result.failure, isNull);
-    expect(result.announcements.length, 1);
-    expect(result.announcements.first.title, 'Pengumuman Akademik');
-  });
+  test(
+    'GetAnnouncements meneruskan daftar pengumuman dari repository',
+    () async {
+      final repo = FakeAnnouncementRepository(
+        items: [
+          Announcement(
+            id: 1,
+            title: 'Pengumuman Akademik',
+            body: 'Jadwal KRS Semester Ganjil',
+            updatedAt: DateTime(2026, 9, 27),
+          ),
+        ],
+      );
+      final result = await GetAnnouncements(repo).call();
+      expect(result.failure, isNull);
+      expect(result.announcements.length, 1);
+      expect(result.announcements.first.title, 'Pengumuman Akademik');
+    },
+  );
 
-  test('GetAnnouncements meneruskan failure tanpa melempar exception', () async {
-    final repo = FakeAnnouncementRepository(fail: true);
-    final result = await GetAnnouncements(repo).call();
-    expect(result.failure, isA<LocalFailure>());
-    expect(result.announcements, isEmpty);
-  });
+  test(
+    'GetAnnouncements meneruskan failure tanpa melempar exception',
+    () async {
+      final repo = FakeAnnouncementRepository(fail: true);
+      final result = await GetAnnouncements(repo).call();
+      expect(result.failure, isA<LocalFailure>());
+      expect(result.announcements, isEmpty);
+    },
+  );
 }

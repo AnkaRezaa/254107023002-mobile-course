@@ -22,7 +22,8 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
   ];
 
   @override
-  Future<({List<Announcement> announcements, Failure? failure})> fetchAnnouncements() async {
+  Future<({List<Announcement> announcements, Failure? failure})>
+  fetchAnnouncements() async {
     try {
       await Future.delayed(const Duration(milliseconds: 200));
       final items = _mockData.map((m) => m.toEntity()).toList();

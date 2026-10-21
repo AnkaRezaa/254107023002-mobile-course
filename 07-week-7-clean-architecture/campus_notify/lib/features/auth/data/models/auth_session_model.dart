@@ -1,10 +1,7 @@
 import '../../domain/entities/auth_session.dart';
 
 class AuthSessionModel extends AuthSession {
-  const AuthSessionModel({
-    required super.access,
-    required super.refresh,
-  });
+  const AuthSessionModel({required super.access, required super.refresh});
 
   factory AuthSessionModel.fromMap(Map<String, Object?> map) {
     return AuthSessionModel(
@@ -13,13 +10,7 @@ class AuthSessionModel extends AuthSession {
     );
   }
 
-  Map<String, Object?> toMap() => {
-        'access': access,
-        'refresh': refresh,
-      };
+  Map<String, Object?> toMap() => {'access': access, 'refresh': refresh};
 
-  AuthSession toEntity() => AuthSession(
-        access: access,
-        refresh: refresh,
-      );
+  AuthSession toEntity() => AuthSession(access: access, refresh: refresh);
 }

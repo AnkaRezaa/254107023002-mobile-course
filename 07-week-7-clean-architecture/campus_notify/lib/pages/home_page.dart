@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../providers/auth_provider.dart';
 
 class HomePage extends ConsumerWidget {
@@ -9,7 +10,9 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fcmToken = ref.watch(fcmTokenProvider); // <- ubah dari fcmToken menjadi token
+    final fcmToken = ref.watch(
+      fcmTokenProvider,
+    ); // <- ubah dari fcmToken menjadi token
 
     // Potong 12 karakter pertama + '...' untuk keamanan screenshot laporan
     final maskedToken = (fcmToken != null && fcmToken.length > 12)
@@ -53,7 +56,9 @@ class HomePage extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text('Login Berhasil! Token tersimpan aman di FlutterSecureStorage.'),
+                  const Text(
+                    'Login Berhasil! Token tersimpan aman di FlutterSecureStorage.',
+                  ),
                 ],
               ),
             ),

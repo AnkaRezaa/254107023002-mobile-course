@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+
 import '../data/token_store.dart';
 import '../data/auth_repository.dart';
 import '../data/api_client.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
 
-final authRepositoryProvider =
-    Provider<AuthRepository>((ref) => AuthRepository());
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(),
+);
 
 final apiClientProvider = Provider<Dio>((ref) {
   final store = ref.watch(tokenStoreProvider);
@@ -22,12 +24,13 @@ class FcmTokenNotifier extends Notifier<String?> {
   void setToken(String? token) => state = token;
 }
 
-final fcmTokenProvider =
-    NotifierProvider<FcmTokenNotifier, String?>(FcmTokenNotifier.new);
+final fcmTokenProvider = NotifierProvider<FcmTokenNotifier, String?>(
+  FcmTokenNotifier.new,
+);
 
-
-final authStateProvider =
-    AsyncNotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
+final authStateProvider = AsyncNotifierProvider<AuthNotifier, bool>(
+  AuthNotifier.new,
+);
 
 class AuthNotifier extends AsyncNotifier<bool> {
   @override

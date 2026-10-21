@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../data/datasources/token_store.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -24,12 +25,14 @@ class FcmTokenNotifier extends Notifier<String?> {
   void setToken(String? token) => state = token;
 }
 
-final fcmTokenProvider =
-    NotifierProvider<FcmTokenNotifier, String?>(FcmTokenNotifier.new);
+final fcmTokenProvider = NotifierProvider<FcmTokenNotifier, String?>(
+  FcmTokenNotifier.new,
+);
 
 // 3. Presentation Layer: State Notifier untuk Auth
-final authStateProvider =
-    AsyncNotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
+final authStateProvider = AsyncNotifierProvider<AuthNotifier, bool>(
+  AuthNotifier.new,
+);
 
 class AuthNotifier extends AsyncNotifier<bool> {
   @override

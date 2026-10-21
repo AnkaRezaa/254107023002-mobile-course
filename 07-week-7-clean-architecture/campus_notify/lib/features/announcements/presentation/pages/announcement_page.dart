@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/entities/announcement.dart';
 import '../providers/announcement_providers.dart';
 
@@ -10,12 +11,9 @@ class AnnouncementsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(announcementsProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pengumuman Kampus'),
-      ),
+      appBar: AppBar(title: const Text('Pengumuman Kampus')),
       body: state.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorView(
           message: '$e',
           onRetry: () => ref.invalidate(announcementsProvider),
@@ -41,10 +39,7 @@ class ErrorView extends StatelessWidget {
         children: [
           Text(message),
           const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: onRetry,
-            child: const Text('Coba Lagi'),
-          ),
+          ElevatedButton(onPressed: onRetry, child: const Text('Coba Lagi')),
         ],
       ),
     );
@@ -65,7 +60,10 @@ class AnnouncementsList extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
             leading: const Icon(Icons.campaign, color: Colors.deepPurple),
-            title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              item.title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: Text(item.body),
           ),
         );

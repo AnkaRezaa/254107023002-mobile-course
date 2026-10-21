@@ -11,23 +11,17 @@ import 'pages/home_page.dart';
 import 'features/announcements/presentation/pages/announcement_page.dart';
 import 'routes.dart';
 
-
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  runApp(
-    const ProviderScope(
-      child: CampusNotifyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: CampusNotifyApp()));
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = ValueNotifier<bool>(false);
   ref.listen(authStateProvider, (_, next) {
-  authNotifier.value = next.value ?? false;
+    authNotifier.value = next.value ?? false;
   });
 
   return GoRouter(
@@ -42,19 +36,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginPage()),
+      GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
       GoRoute(
-        path: AppRoutes.login,
-        builder: (_, _) => const LoginPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.home,
-        builder: (_, _) => const HomePage(),
-      ),
-        GoRoute(
         path: AppRoutes.announcement,
         builder: (_, s) => const AnnouncementsPage(),
       ),
-
     ],
   );
 });

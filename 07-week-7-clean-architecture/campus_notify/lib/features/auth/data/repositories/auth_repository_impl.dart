@@ -31,18 +31,26 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<({String? access, Failure? failure})> refresh(String refreshToken) async {
+  Future<({String? access, Failure? failure})> refresh(
+    String refreshToken,
+  ) async {
     try {
       await Future.delayed(const Duration(milliseconds: 200));
       if (refreshToken.isEmpty) {
-        return (access: null, failure: const AuthFailure('Refresh token kosong'));
+        return (
+          access: null,
+          failure: const AuthFailure('Refresh token kosong'),
+        );
       }
       return (
         access: 'mock-access-renewed-${DateTime.now().millisecondsSinceEpoch}',
         failure: null,
       );
     } catch (e) {
-      return (access: null, failure: NetworkFailure('Gagal memperbarui token: $e'));
+      return (
+        access: null,
+        failure: NetworkFailure('Gagal memperbarui token: $e'),
+      );
     }
   }
 }

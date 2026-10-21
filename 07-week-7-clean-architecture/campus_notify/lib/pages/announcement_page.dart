@@ -7,9 +7,7 @@ class AnnouncementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Pengumuman #$id'),
-      ),
+      appBar: AppBar(title: Text('Pengumuman #$id')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Card(

@@ -1,13 +1,12 @@
 import 'package:dio/dio.dart';
 
-
 String mapDioExceptionToMessage(DioException error) {
   switch (error.type) {
     case DioExceptionType.connectionTimeout:
     case DioExceptionType.sendTimeout:
     case DioExceptionType.receiveTimeout:
       return 'Koneksi ke server batas waktu (timeout). Silakan periksa jaringan Anda.';
-      
+
     case DioExceptionType.badResponse:
       final statusCode = error.response?.statusCode;
       if (statusCode == 401) {
@@ -20,16 +19,16 @@ String mapDioExceptionToMessage(DioException error) {
         return 'Terjadi gangguan pada server kampus ($statusCode). Silakan coba lagi nanti.';
       }
       return 'Terjadi kesalahan respon dari server (${error.response?.statusCode}).';
-      
+
     case DioExceptionType.connectionError:
       return 'Tidak dapat terhubung ke server. Pastikan perangkat Anda terhubung ke internet.';
-      
+
     case DioExceptionType.cancel:
       return 'Permintaan ke server dibatalkan.';
-      
+
     case DioExceptionType.badCertificate:
       return 'Sertifikat keamanan server tidak valid.';
-      
+
     case DioExceptionType.unknown:
     default:
       return 'Terjadi kesalahan yang tidak terduga. Silakan coba beberapa saat lagi.';

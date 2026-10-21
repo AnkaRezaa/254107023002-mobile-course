@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../providers/auth_providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -10,7 +11,9 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final _emailController = TextEditingController(text: 'mahasiswa@kampus.ac.id');
+  final _emailController = TextEditingController(
+    text: 'mahasiswa@kampus.ac.id',
+  );
   final _passwordController = TextEditingController(text: '123456');
   final _formKey = GlobalKey<FormState>();
 
@@ -24,16 +27,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     try {
-      await ref.read(authStateProvider.notifier).login(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
-          );
+      await ref
+          .read(authStateProvider.notifier)
+          .login(_emailController.text.trim(), _passwordController.text.trim());
     } catch (e) {
       final errorMessage = e.toString().replaceAll('Exception: ', '');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     }
   }
@@ -125,7 +126,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         )
                       : const Text(
                           'MASUK',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
               ],
