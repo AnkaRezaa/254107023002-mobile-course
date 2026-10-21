@@ -104,24 +104,54 @@ Pada pertemuan kali ini saya mempelajari tentang konsep Git Flow dan strategi br
 ### Praktikum 2 — PR dan peer review
 
 1. **Format Pull Request**:
-   - **Judul**: `feat(scope): deskripsi singkat`
-   - **Masalah**: 
-   - **Solusi**: 
+   - **Judul**: `feat(announcements): validasi judul kosong + test`
+   - **Masalah**: Pengguna dapat menyimpan pengumuman baru tanpa judul atau hanya berisi karakter spasi kosong, yang berisiko merusak tampilan antarmuka list pengumuman.
+   - **Solusi**: Menambahkan use case `AddAnnouncement` pada domain layer dengan aturan validasi bisnis (`title.trim().isEmpty`). Jika tidak valid, fungsi langsung mengembalikan `LocalFailure('Judul pengumuman tidak boleh kosong')` sebelum menyentuh repository.
    - **Cara Uji**: 
-   - **Issue Reference**: `Closes #`
+     1. Masuk ke direktori: `cd 07-week-7-clean-architecture/campus_notify`
+     2. Jalankan unit test: `flutter test test/add_announcement_test.dart`
+     3. Verifikasi dua pengujian berhasil (penolakan judul kosong/spasi & penambahan data valid).
+   - **Issue Reference**: `Closes #1`
 
-   <!-- Screenshot halaman Pull Request di GitHub / Git Provider -->
-   ![Pull Request](screenshots/pull_request.png)
+   **Dokumentasi Screenshot Issue & Pull Request**:
+   ![Pembuatan Issue #1 di GitHub](screenshots/make_issue.jpg)
+   ![Pull Request #2 Berhasil di-Merge ke develop](screenshots/pull_request.jpg)
+
+   **Penjelasan Singkat Issue & PR**:
+   Issue #1 (`make_issue.jpg`) dibuat untuk mendefinisikan masalah bahwa pengguna dapat menyimpan pengumuman kosong. Selanjutnya, Pull Request #2 (`pull_request.jpg`) diajukan dari branch `feat/announcements-validation` menuju branch `develop` dengan melampirkan solusi teknis use case, cara pengujian, dan keterhubungan `Closes #1`. Setelah review selesai, PR berhasil di-merge ke branch `develop` dan branch fitur dihapus dari repository.
 
 2. **Hasil Peer Review (Review Sejawat)**:
-   - **Reviewer**: 
-   - **Temuan Kebenaran (Logic / Bug / Edge Case)**: 
-   - **Temuan Arsitektur (Clean Architecture / Dependency Rule)**: 
-   - **Temuan Test & Keterbacaan**: 
-   - **Keputusan Akhir**: `Approve` / `Request changes`
+   - **Reviewer**: Peer Reviewer (Mahasiswa Sejawat)
+
+   **Dokumentasi Screenshot Proses & Hasil Review Sejawat**:
+   ![Proses Pemberian Komentar Review Sejawat di Tab Files Changed](screenshots/review_sejawat.jpg)
+   ![Hasil Publikasi Komentar Review Sejawat di Halaman PR](screenshots/hasil_review_sejawat.jpg)
+
+   **Penjelasan Singkat Review Sejawat**:
+   Proses review dilakukan langsung pada baris kode di tab *Files changed* GitHub (`review_sejawat.jpg`). Komentar disusun menggunakan pola baku *Observasi $\rightarrow$ Dampak $\rightarrow$ Usulan konkret*, mengkritisi parameter `body` yang belum di-trim. Hasil submit review (`hasil_review_sejawat.jpg`) menampilkan persetujuan (*LGTM*) karena arsitektur domain terbukti steril dan unit test lulus 100%.
+
+   - **Rincian Temuan Kebenaran (Logic / Bug / Edge Case)**:
+     1. *Temuan 1 (Sanitasi Parameter Body)*:
+        - *Observasi*: Pada `AddAnnouncement`, fungsi melakukan `title.trim()` namun parameter `body` diteruskan apa adanya tanpa sanitasi.
+        - *Dampak*: Jika pengguna mengirimkan body berisi spasi kosong (`"   "`), data spasi tidak berguna tetap tersimpan di database/repository.
+        - *Usulan konkret*: Terapkan sanitasi `body: body.trim()` sebelum data dikirim ke `_repository.addAnnouncement`.
+     2. *Temuan 2 (Penanganan Edge Case String Panjang)*:
+        - *Observasi*: Validasi baru memeriksa apakah judul kosong (`isEmpty`), belum ada batas maksimum karakter.
+        - *Dampak*: Jika input judul sangat panjang tanpa batas, layout kartu UI berisiko mengalami overflow jika tidak dibatasi text wrapping.
+        - *Usulan konkret*: Disarankan menambahkan batas karakter maksimum (misal 150 karakter) di masa mendatang jika form input dihubungkan ke database SQL dengan panjang kolom terbatas.
+   - **Temuan Arsitektur (Clean Architecture / Dependency Rule)**:
+     - *Observasi*: Berkas `add_announcement.dart` berada di `lib/features/announcements/domain/usecases/` dan hanya mengimpor `Announcement`, `AnnouncementRepository`, dan `Failure`.
+     - *Dampak*: Sangat baik, arsitektur domain layer terbukti 100% murni Dart dan steril dari dependensi framework UI (`flutter/material.dart`), database SQLite, maupun HTTP Dio.
+     - *Usulan konkret*: Pertahankan aturan dependensi ini agar domain tetap mudah diuji menggunakan Fake Repository murni.
+   - **Temuan Test & Keterbacaan**:
+     - *Temuan Test*: Unit test `add_announcement_test.dart` telah menguji skenario judul kosong dan penambahan data sukses. Usulan: tambahkan skenario kegagalan downstream jika repository mengembalikan `Failure`.
+     - *Saran Keterbacaan*: Penamaan variabel pengujian ekspresif dan mudah dibaca. Disarankan menambahkan docstring singkat (`/// Menambahkan pengumuman baru dengan validasi judul wajib`) di atas kelas `AddAnnouncement`.
+   - **Keputusan Akhir**: **`Approve`** (Disetujui untuk di-merge).
 
 3. **Tindak Lanjut & Merge**:
-   <!-- Catat hasil revisi dan proses merge branch -->
+   - Pull Request #2 berhasil disetujui (*Approved*) dan di-merge ke branch `develop` (terbukti dengan status **Merged** berwarna ungu pada screenshot `pull_request.jpg`).
+   - Issue `#1` ditutup secara otomatis melalui keterhubungan keyword `Closes #1`.
+   - Branch fitur `feat/announcements-validation` dihapus (*Delete branch*) dari remote GitHub agar daftar branch aktif tetap pendek dan teratur.
 
 ---
 
