@@ -224,19 +224,24 @@ Berikan 5 temuan teratas + level (blocker/saran)
 jawab :
 
 - **Temuan AI yang Diterima (Minimal 2)**:
-  1. 
-  2. 
+  1. **Cakupan Pengujian Boundary Edge-Cases (Temuan 1)**: AI menemukan bahwa unit test `add_announcement_test.dart` baru menguji spasi `'   '`, namun belum menguji string kosong murni `''` atau whitespace karakter khusus (`\n`, `\t`). Diterima karena pengujian batas ekstrem mutlak diperlukan untuk mencegah regresi logika validasi.
+  2. **Pengujian Jalur Kegagalan (*Failure Path*) Repository (Temuan 2)**: AI menemukan bahwa mock/fake repository hanya menguji pengembalian sukses (`failure: null`) dan belum memvalidasi bagaimana use case meneruskan `ServerFailure` atau error data source. Diterima untuk memperkuat keandalan penanganan error.
 
 - **Temuan AI yang Ditolak (Minimal 1)**:
-  1. 
+  1. **Injeksi `BuildContext` & Tampilan SnackBar di Domain Use Case (Temuan 3)**: AI menyarankan menambahkan parameter `BuildContext context` ke method `AddAnnouncement.call()` untuk langsung memunculkan `ScaffoldMessenger.showSnackBar()`. **DITOLAK KERAS** karena merupakan pelanggaran fatal terhadap *Dependency Rule* Clean Architecture. Lapisan domain harus murni Dart (*pure Dart*) dan dilarang keras mengimpor framework UI (`flutter/material.dart`).
+  2. **Pemindahan Berkas ke `lib/core/usecases/` (Temuan 5)**: AI menyarankan memindahkan use case ke direktori global `core/`. **DITOLAK** karena bertentangan dengan struktur *Feature-First* yang memusatkan logika pengumuman di `features/announcements/`.
 
 - **Tabel Komparasi: Usulan AI vs Keputusan Final Mahasiswa**:
 
 | Temuan AI | Level | Rekomendasi AI | Keputusan Mahasiswa | Alasan & Argumen Teknis |
 |---|:---:|---|:---:|---|
-| Temuan 1 | | | Diterima / Ditolak | |
-| Temuan 2 | | | Diterima / Ditolak | |
-| Temuan 3 | | | Diterima / Ditolak | |
+| **1. Boundary Test** | Blocker | Tambah pengujian input `''` dan whitespace newline | **Diterima** | Terbukti via audit kode; unit test perlu menguji skenario batas input ekstrem. |
+| **2. Failure Path Test** | Saran | Tambah simulasi error repository di unit test | **Diterima** | Terbukti via audit test; use case harus diuji perilakunya saat data source gagal. |
+| **3. Injeksi BuildContext** | Blocker | Oper `BuildContext` & panggil `SnackBar` di domain | **Ditolak** | **Pelanggaran Arsitektur**. Domain layer dilarang mengimpor `flutter/material.dart` atau dependensi UI. |
+| **4. Result Pattern** | Saran | Gunakan sealed class `Result<T>` daripada Record | **Diterima (Fase Lanjut)** | Saran konstruktif; untuk paruh pertama record tetap dipertahankan demi konsistensi kode lama. |
+| **5. Relokasi Berkas** | Saran | Pindahkan use case ke `lib/core/usecases/` | **Ditolak** | **Menyalahi Feature-First**. Logika domain fitur harus berada di modul fiturnya sendiri. |
+
+Dokumentasi lengkap dan transparan tersimpan di [docs/ai-review-vs-keputusan.md](docs/ai-review-vs-keputusan.md).
 
 Dokumentasi lengkap tersimpan di [docs/](./docs).
 
