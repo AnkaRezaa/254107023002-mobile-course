@@ -363,27 +363,32 @@ Setiap perubahan kode yang memengaruhi perilaku sistem diwajibkan menyertakan bu
 1. Apa beda LGTM ("Looks Good To Me") buta dengan approve yang bertanggung jawab? Apa risikonya bagi tim?
 
 jawab : 
-- **LGTM Buta**: Menyetujui PR secara terburu-buru hanya dengan membaca sekilas kode di antarmuka web, tanpa memahami konteks issue, tanpa menguji *edge cases*, dan tanpa melakukan verifikasi lokal (`pull` & `test`).
-- **Approve Bertanggung Jawab**: Memeriksa kode baris demi baris, memvalidasi kepatuhan terhadap arsitektur (*Dependency Rule*), memastikan pengujian unit mencakup skenario gagal/batas, serta memastikan tidak ada regresi pada fitur yang sudah ada.
-- **Risiko bagi Tim**: LGTM buta menyebabkan penumpukan hutang teknis (*technical debt*), potensi bug lolos ke lingkungan produksi, rusaknya struktur arsitektur aplikasi, dan mempersulit pengembangan fitur di paruh kedua semester.
+Bedanya jauh sekali. LGTM buta itu ibarat cuma "formalitas tanda tangan"—buka PR di web GitHub, scroll cepat tanpa benar-benar dibaca, lalu langsung klik approve karena sungkan sama teman atau ingin cepat selesai. Kita sama sekali tidak mengecek apakah kodenya menyimpan bug tersembunyi atau membuat fitur lama jadi rusak.
+
+Sebaliknya, approve yang bertanggung jawab itu ketika kita benar-benar meluangkan waktu: membaca alur logikanya baris demi baris, mengecek apakah pengujian unit test sudah mencakup skenario gagal/batas, dan memastikan aturan arsitektur dipatuhi. 
+
+Risikonya kalau tim terbiasa LGTM buta: aplikasi bakal sangat rapuh dan gampang jebol saat dipakai pengguna karena bug-bug sepele lolos ke tahap production. Ujung-ujungnya tim akan kewalahan sendiri karena hutang teknis (*technical debt*) menumpuk dan harus lembur memperbaiki error yang sebenarnya bisa dicegah sejak awal.
 
 2. Kapan komentar review wajib berstatus request changes, dan kapan cukup sekadar saran (comment / nitpick)?
 
 jawab : 
-- **Wajib Request Changes**: Diberikan ketika ditemukan cacat mendasar berkategori **Blocker**, seperti: potensi *crash/null-pointer*, celah keamanan, pelanggaran batas arsitektur (misal layer domain mengimpor layer UI atau data luar), ketiadaan unit test untuk logika baru, atau kegagalan pemeriksaan mesin. PR dilarang di-merge sebelum masalah ini diperbaiki.
-- **Cukup Sekadar Saran (Comment / Nitpick)**: Diberikan ketika menyangkut preferensi gaya penulisan minor di luar cakupan linter, usulan perbaikan kecil non-kritis untuk iterasi rilis mendatang (misal saran migrasi Record ke sealed class), atau pertanyaan klarifikasi ide implementasi. Komentar ini tidak bersifat memblokir merge PR.
+Komentar wajib berstatus **Request Changes** kalau masalahnya bersifat fatal (*blocker*). Contohnya: ada potensi aplikasi tiba-tiba *force close* (seperti unhandled error / null issue), celah keamanan, use case baru yang belum ada unit test-nya sama sekali, atau pelanggaran batas arsitektur (misal layer domain tiba-tiba mengimpor widget Flutter UI atau Dio). PR dengan kondisi seperti ini tidak boleh di-merge sampai diperbaiki oleh author.
+
+Sementara itu, status cukup berupa **Saran (Comment / Nitpick)** kalau menyangkut hal-hal kecil yang sifatnya preferensi dan tidak merusak fungsi aplikasi. Contohnya: saran penamaan variabel yang lebih komunikatif, ide refactoring untuk sprint rilis berikutnya, atau sekadar bertanya alasan memilih algoritma tertentu. Catatan ini bagus untuk diskusi, tapi reviewer tidak perlu sampai menahan atau memblokir merge PR.
 
 3. Bagian mana dari review AI yang Anda tolak atau sederhanakan, dan mengapa?
 
 jawab : 
-- **Bagian yang Ditolak**: Usulan AI (Temuan 3) yang menyarankan untuk mengoper parameter `BuildContext context` ke dalam Use Case Domain `AddAnnouncement` agar bisa langsung memicu `ScaffoldMessenger.of(context).showSnackBar()`.
-- **Alasan Penolakan**: Ini adalah pelanggaran fatal terhadap prinsip dasar Clean Architecture (*Dependency Rule*). Layer domain harus berupa *pure Dart* yang steril dari framework UI Flutter (`flutter/material.dart`). Urusan presentasi UI dan penanganan konteks widget adalah tanggung jawab penuh Presentation Layer. Selain itu, usulan AI (Temuan 5) untuk memindahkan use case ke direktori global `core/` juga ditolak demi menjaga prinsip modularitas *Feature-First*.
+Bagian yang paling tegas saya tolak adalah saran AI (Temuan 3) yang menyuruh mengoper parameter `BuildContext context` ke dalam Use Case Domain `AddAnnouncement` hanya agar bisa langsung memunculkan `ScaffoldMessenger.showSnackBar()`.
+
+Alasan penolakannya sederhana: itu halusinasi AI yang merusak aturan dasar Clean Architecture (*Dependency Rule*). Layer domain itu hukumnya wajib berupa *pure Dart* yang steril dari framework UI Flutter (`flutter/material.dart`). Urusan menampilkan pop-up atau snackbar adalah tanggung jawab Presentation Layer, bukan urusan Use Case. Kalau saran AI itu saya telan mentah-mentah, pemisahan layer yang sudah dibangun susah payah dari Minggu 7 akan langsung rusak. Selain itu, saya juga menolak saran AI untuk memindahkan file ke `lib/core/` karena struktur proyek kita menggunakan pendekatan *feature-first*.
 
 4. Satu hal konkret yang Anda perbaiki setelah review sejawat — apa dampaknya terhadap kualitas aplikasi?
 
 jawab : 
-- **Hal Konkret yang Diperbaiki**: Memperbaiki logika validasi judul pengumuman pada use case `AddAnnouncement` menggunakan pembersihan spasi `title.trim().isEmpty`, melakukan pembersihan spasi pada parameter `body: body.trim()`, serta melengkapinya dengan unit test pada kondisi input spasi kosong murni (`'   '`).
-- **Dampaknya terhadap Kualitas Aplikasi**: Mencegah data sampah (*junk data*) masuk ke dalam memori aplikasi atau database. Tanpa sanitasi `.trim()`, pengguna dapat menyimpan judul atau isi yang hanya berisi karakter spasi kosong, yang berakibat pada munculnya kartu pengumuman tanpa teks di antarmuka pengguna (*broken UI*).
+Hal konkret yang saya perbaiki adalah menambahkan pembersihan spasi menggunakan `body: body.trim()` pada use case `AddAnnouncement`, serta menambahkan pengujian unit test untuk skenario input spasi kosong murni (`'   '`).
+
+Dampaknya terasa nyata pada kualitas data dan tampilan aplikasi. Kalau kita cuma mengandalkan pengecekan `isNotEmpty` biasa tanpa `.trim()`, pengguna yang tidak sengaja (atau iseng) menekan spasi beberapa kali bisa lolos validasi. Akibatnya, string kosong itu akan tersimpan ke database dan memunculkan kartu pengumuman kosong melompong di layar HP (*broken UI*). Dengan perbaikan kecil ini, data yang masuk dipastikan bersih dan UI aplikasi tetap terlihat profesional.
 
 ---
 
