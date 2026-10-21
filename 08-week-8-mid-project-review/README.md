@@ -251,19 +251,39 @@ Dokumentasi lengkap tersimpan di [docs/](./docs).
 
 ### Refactoring Challenge
 
-1. **Tindak Lanjut Review Sejawat**: Menyesuaikan kode berdasarkan komentar *request changes* hingga mendapatkan status *approve*.
-2. **Otomatisasi Style Formatting**: Memastikan seluruh berkas dirapikan dengan `dart format` sehingga review kode terbebas dari perdebatan spasi/style.
-3. **Pemisahan PR Terfokus**: Memastikan setiap PR berukuran kecil (< 300 baris perubahan) dan fokus pada satu tanggung jawab fitur.
+1. **Tindak Lanjut Review Sejawat**:
+   - Menindaklanjuti permintaan perubahan (*request changes*) dari reviewer sejawat terkait pengabaian input spasi murni (`'   '`). Logika validasi disempurnakan menggunakan `title.trim().isEmpty` pada `AddAnnouncement` dan diverifikasi dengan unit test hingga memperoleh status **Approved**.
+   - Pull Request tidak di-merge dalam kondisi *Request Changes*, melainkan setelah semua diskusi teknis terselesaikan.
+2. **Otomatisasi Style Formatting**:
+   - Memindahkan seluruh urusan format kode ke mesin otomatis melalui perintah `dart format --set-exit-if-changed .` dan integrasi GitHub Actions CI (`.github/workflows/ci.yml`). Dengan demikian, proses peer review manusia murni berfokus pada logika, arsitektur, dan keamanan.
+3. **Pemisahan PR Terfokus (< 300 Baris)**:
+   - PR #2 (`feat/announcements-validation`) dirancang sangat ringkas (total ~80 baris perubahan kode use case dan test), sehingga mudah dipahami dan waktu review selesai dalam < 15 menit.
 
 ### Testing
 
-- `flutter analyze`
-- `flutter test`
+Setiap perubahan kode yang memengaruhi perilaku sistem diwajibkan menyertakan bukti uji mesin otomatis:
+- `flutter analyze` : Memastikan ketiadaan error lint dan unused imports (0 issues).
+- `flutter test` : Menjamin seluruh test suite domain berjalan 100% hijau (*All tests passed*).
 
-jawab :
+<!-- Bukti pengujian mesin otomatis -->
+![Hasil Testing Statis dan Unit Test](screenshots/Bersihkan_dengan_mesin.jpg)
 
-<!-- Screenshot hasil analyze dan test akhir -->
-![Hasil Testing](screenshots/testing_final.png)
+### Error Umum dan Solusinya
+
+| Gejala | Penyebab Umum | Solusi Praktis |
+|---|---|---|
+| **PR 800 baris tak kunjung direview** | Terlalu banyak fitur digabung dalam satu PR besar | Pecah menjadi per-fitur; batasi satu PR < 300 baris perubahan. |
+| **Konflik merge berulang (*merge hell*)** | Cabang berumur panjang dan jarang sinkron dengan base branch | Lakukan *pull* atau *rebase* `develop` setiap hari; umur branch fitur < 3 hari. |
+| **Review habis hanya untuk debat spasi** | Tidak ada standarisasi formatter otomatis dan CI gatekeeper | Wajibkan eksekusi `dart format` lokal dan pasang CI verify (`flutter analyze`). |
+| **Status Approve tapi bug lolos ke production** | Reviewer hanya membaca tampilan web tanpa pull & test lokal | Reviewer wajib checkout branch PR, menjalankan kode, dan menguji manual. |
+| **Saran AI merusak fondasi arsitektur** | Rekomendasi AI ditelan mentah-mentah tanpa verifikasi kritis | Uji saran AI secara kritis; tolak saran yang melanggar *Dependency Rule* Clean Architecture. |
+
+### Checklist Verifikasi Mandiri
+
+- [x] **Branching & Git Flow**: Dicabangkan dari `develop`, PR kecil untuk satu fitur (< 300 baris), issue `#1` tertutup otomatis via keyword `Closes #1`.
+- [x] **Peer Review Bermakna**: Minimal 3 komentar review (kebenaran input, arsitektur use case, pengujian kegagalan) ditindaklanjuti hingga status *Approve*.
+- [x] **Pemeriksaan Mesin Bersih**: `flutter analyze` bersih (0 issues), `dart format` terformat rapi, `flutter test` 100% lulus.
+- [x] **Evaluasi Kritis AI**: Tabel usulan AI vs keputusan final terdokumentasi lengkap dan transparan di [docs/ai-review-vs-keputusan.md](docs/ai-review-vs-keputusan.md).
 
 ---
 
@@ -278,9 +298,9 @@ jawab :
 - **Cabang (Branch)**: `feat/announcements-validation` $\rightarrow$ `develop` (Merged)
 
 ### 2. Fitur Utama Proyek
-1. 
-2. 
-3. 
+1. **Otentikasi & Manajemen Sesi Pengguna**: Alur login simulasi dengan penyimpanan token aman berbasis Clean Architecture.
+2. **Katalog Informasi & Pengumuman Kampus**: Menampilkan daftar pengumuman perkuliahan dengan pemisahan tegas antara entity domain, repository contract, dan presentasi berbasis Riverpod.
+3. **Validasi & Penambahan Pengumuman Baru**: Use case domain `AddAnnouncement` dengan sanitasi teks (*whitespace trim*), penanganan error berbasis domain *Failure*, dan pengujian unit otomatis komprehensif.
 
 ### 3. Stack Teknologi
 - **Framework**: Flutter SDK (Dart 3.x)
@@ -304,6 +324,7 @@ jawab :
 3. Jalankan pengujian statis dan unit test:
    ```bash
    flutter analyze
+   dart format --set-exit-if-changed .
    flutter test
    ```
 4. Jalankan aplikasi:
@@ -312,9 +333,10 @@ jawab :
    ```
 
 ### 5. Hasil yang Dicapai
-- 
-- 
-- 
+- **Adopsi Git Flow Standar Industri**: Berhasil membangun alur kerja kolaborasi profesional dengan branch integrasi `develop` dan branch fitur terfokus.
+- **Siklus Peer Code Review Konstruktif**: Melaksanakan review sejawat menggunakan pola umpan balik standar (*Observasi $\rightarrow$ Dampak $\rightarrow$ Usulan konkret*) serta penutupan otomatis issue GitHub via PR #2.
+- **Fondasi Pemeriksaan Mesin Otomatis (CI)**: `flutter analyze` 100% bersih (0 issues), seluruh berkas terformat rapi dengan `dart format`, dan pengujian unit berjalan hijau.
+- **Integritas Arsitektur & Berpikir Kritis**: Berhasil mendeteksi serta menolak halusinasi AI yang melanggar *Dependency Rule* Clean Architecture (menolak injeksi `BuildContext` ke dalam Domain layer).
 
 ---
 
@@ -323,18 +345,27 @@ jawab :
 1. Apa beda LGTM ("Looks Good To Me") buta dengan approve yang bertanggung jawab? Apa risikonya bagi tim?
 
 jawab : 
+- **LGTM Buta**: Menyetujui PR secara terburu-buru hanya dengan membaca sekilas kode di antarmuka web, tanpa memahami konteks issue, tanpa menguji *edge cases*, dan tanpa melakukan verifikasi lokal (`pull` & `test`).
+- **Approve Bertanggung Jawab**: Memeriksa kode baris demi baris, memvalidasi kepatuhan terhadap arsitektur (*Dependency Rule*), memastikan pengujian unit mencakup skenario gagal/batas, serta memastikan tidak ada regresi pada fitur yang sudah ada.
+- **Risiko bagi Tim**: LGTM buta menyebabkan penumpukan hutang teknis (*technical debt*), potensi bug lolos ke lingkungan produksi, rusaknya struktur arsitektur aplikasi, dan mempersulit pengembangan fitur di paruh kedua semester.
 
 2. Kapan komentar review wajib berstatus request changes, dan kapan cukup sekadar saran (comment / nitpick)?
 
 jawab : 
+- **Wajib Request Changes**: Diberikan ketika ditemukan cacat mendasar berkategori **Blocker**, seperti: potensi *crash/null-pointer*, celah keamanan, pelanggaran batas arsitektur (misal layer domain mengimpor layer UI atau data luar), ketiadaan unit test untuk logika baru, atau kegagalan pemeriksaan mesin. PR dilarang di-merge sebelum masalah ini diperbaiki.
+- **Cukup Sekadar Saran (Comment / Nitpick)**: Diberikan ketika menyangkut preferensi gaya penulisan minor di luar cakupan linter, usulan perbaikan kecil non-kritis untuk iterasi rilis mendatang (misal saran migrasi Record ke sealed class), atau pertanyaan klarifikasi ide implementasi. Komentar ini tidak bersifat memblokir merge PR.
 
 3. Bagian mana dari review AI yang Anda tolak atau sederhanakan, dan mengapa?
 
 jawab : 
+- **Bagian yang Ditolak**: Usulan AI (Temuan 3) yang menyarankan untuk mengoper parameter `BuildContext context` ke dalam Use Case Domain `AddAnnouncement` agar bisa langsung memicu `ScaffoldMessenger.of(context).showSnackBar()`.
+- **Alasan Penolakan**: Ini adalah pelanggaran fatal terhadap prinsip dasar Clean Architecture (*Dependency Rule*). Layer domain harus berupa *pure Dart* yang steril dari framework UI Flutter (`flutter/material.dart`). Urusan presentasi UI dan penanganan konteks widget adalah tanggung jawab penuh Presentation Layer. Selain itu, usulan AI (Temuan 5) untuk memindahkan use case ke direktori global `core/` juga ditolak demi menjaga prinsip modularitas *Feature-First*.
 
 4. Satu hal konkret yang Anda perbaiki setelah review sejawat — apa dampaknya terhadap kualitas aplikasi?
 
 jawab : 
+- **Hal Konkret yang Diperbaiki**: Memperbaiki logika validasi judul pengumuman pada use case `AddAnnouncement` menggunakan pembersihan spasi `title.trim().isEmpty`, serta melengkapinya dengan unit test pada kondisi input spasi kosong murni (`'   '`).
+- **Dampaknya terhadap Kualitas Aplikasi**: Mencegah data sampah (*junk data*) masuk ke dalam memori aplikasi atau database. Tanpa sanitasi `.trim()`, pengguna dapat menyimpan judul yang hanya berisi karakter spasi kosong, yang berakibat pada munculnya kartu pengumuman tanpa teks di antarmuka pengguna (*broken UI*).
 
 ---
 
