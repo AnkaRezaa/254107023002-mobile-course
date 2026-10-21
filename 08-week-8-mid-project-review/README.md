@@ -252,8 +252,8 @@ Dokumentasi lengkap tersimpan di [docs/](./docs).
 ### Refactoring Challenge
 
 1. **Tindak Lanjut Review Sejawat**:
-   - Menindaklanjuti permintaan perubahan (*request changes*) dari reviewer sejawat terkait pengabaian input spasi murni (`'   '`). Logika validasi disempurnakan menggunakan `title.trim().isEmpty` pada `AddAnnouncement` dan diverifikasi dengan unit test hingga memperoleh status **Approved**.
-   - Pull Request tidak di-merge dalam kondisi *Request Changes*, melainkan setelah semua diskusi teknis terselesaikan.
+   - Menindaklanjuti catatan review sejawat pada baris ke-12 `add_announcement.dart` terkait sanitasi whitespace. Logika validasi disempurnakan dengan `title.trim()` dan `body: body.trim()` sebelum dikirimkan ke repositori, serta diverifikasi dengan unit test hingga memperoleh status **Approved** (terdokumentasi pada screenshot `review_sejawat.jpg` dan `hasil_review_sejawat.jpg`).
+   - Pull Request tidak di-merge dalam kondisi *Request Changes*, melainkan setelah semua diskusi teknis terselesaikan dan disetujui.
 2. **Otomatisasi Style Formatting**:
    - Memindahkan seluruh urusan format kode ke mesin otomatis melalui perintah `dart format --set-exit-if-changed .` dan integrasi GitHub Actions CI (`.github/workflows/ci.yml`). Dengan demikian, proses peer review manusia murni berfokus pada logika, arsitektur, dan keamanan.
 3. **Pemisahan PR Terfokus (< 300 Baris)**:
@@ -261,12 +261,31 @@ Dokumentasi lengkap tersimpan di [docs/](./docs).
 
 ### Testing
 
-Setiap perubahan kode yang memengaruhi perilaku sistem diwajibkan menyertakan bukti uji mesin otomatis:
-- `flutter analyze` : Memastikan ketiadaan error lint dan unused imports (0 issues).
-- `flutter test` : Menjamin seluruh test suite domain berjalan 100% hijau (*All tests passed*).
+Setiap perubahan kode yang memengaruhi perilaku sistem diwajibkan menyertakan bukti uji:
 
-<!-- Bukti pengujian mesin otomatis -->
-![Hasil Testing Statis dan Unit Test](screenshots/Bersihkan_dengan_mesin.jpg)
+1. **Uji Mesin Otomatis**:
+   - `flutter analyze` : Memastikan ketiadaan error lint dan unused imports (0 issues).
+   - `flutter test` : Menjamin seluruh test suite domain berjalan 100% hijau (*All tests passed*).
+
+   <!-- Bukti pengujian mesin otomatis -->
+   ![Hasil Testing](screenshots/Bersihkan_dengan_mesin.jpg)
+
+2. **Langkah Uji Manual 5 Menit per Fitur (Pengumuman / Announcements)**:
+   Reviewer wajib menguji aplikasi secara langsung untuk memverifikasi logika di antarmuka pengguna:
+   - **Langkah 1 (Jalankan Aplikasi)**: Eksekusi `flutter run` pada direktori proyek `campus_notify`.
+   - **Langkah 2 (Navigasi Halaman)**: Masuk ke halaman katalog pengumuman (`/announcements`).
+   - **Langkah 3 (Uji Skenario Negatif / Validasi)**:
+     - Masukkan judul yang hanya berisi karakter spasi kosong: `'   '`.
+     - Klik tombol simpan.
+     - **Hasil yang Diharapkan**: Use case menolak penyimpanan dan mengembalikan `LocalFailure('Judul pengumuman tidak boleh kosong')`. Tidak ada data pengumuman kosong yang bertambah di UI.
+   - **Langkah 4 (Uji Skenario Positif)**:
+     - Masukkan judul pengumuman yang valid: `'Kuliah Tamu Mobile AI'`.
+     - Masukkan deskripsi: `'Ruang Multimedia Lt. 3'`.
+     - Klik tombol simpan.
+     - **Hasil yang Diharapkan**: Pengumuman baru berhasil tersimpan dan kartu pengumuman langsung ter-render pada antarmuka.
+
+   <!-- Bukti aplikasi berhasil dijalankan dan diuji manual di browser/device -->
+   ![Aplikasi Campus Notify Berjalan](screenshots/aplikasi_berjalan.png)
 
 ### Error Umum dan Solusinya
 
@@ -324,7 +343,6 @@ Setiap perubahan kode yang memengaruhi perilaku sistem diwajibkan menyertakan bu
 3. Jalankan pengujian statis dan unit test:
    ```bash
    flutter analyze
-   dart format --set-exit-if-changed .
    flutter test
    ```
 4. Jalankan aplikasi:
@@ -364,8 +382,8 @@ jawab :
 4. Satu hal konkret yang Anda perbaiki setelah review sejawat — apa dampaknya terhadap kualitas aplikasi?
 
 jawab : 
-- **Hal Konkret yang Diperbaiki**: Memperbaiki logika validasi judul pengumuman pada use case `AddAnnouncement` menggunakan pembersihan spasi `title.trim().isEmpty`, serta melengkapinya dengan unit test pada kondisi input spasi kosong murni (`'   '`).
-- **Dampaknya terhadap Kualitas Aplikasi**: Mencegah data sampah (*junk data*) masuk ke dalam memori aplikasi atau database. Tanpa sanitasi `.trim()`, pengguna dapat menyimpan judul yang hanya berisi karakter spasi kosong, yang berakibat pada munculnya kartu pengumuman tanpa teks di antarmuka pengguna (*broken UI*).
+- **Hal Konkret yang Diperbaiki**: Memperbaiki logika validasi judul pengumuman pada use case `AddAnnouncement` menggunakan pembersihan spasi `title.trim().isEmpty`, melakukan pembersihan spasi pada parameter `body: body.trim()`, serta melengkapinya dengan unit test pada kondisi input spasi kosong murni (`'   '`).
+- **Dampaknya terhadap Kualitas Aplikasi**: Mencegah data sampah (*junk data*) masuk ke dalam memori aplikasi atau database. Tanpa sanitasi `.trim()`, pengguna dapat menyimpan judul atau isi yang hanya berisi karakter spasi kosong, yang berakibat pada munculnya kartu pengumuman tanpa teks di antarmuka pengguna (*broken UI*).
 
 ---
 

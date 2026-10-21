@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,9 @@ import 'routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+  }
 
   runApp(const ProviderScope(child: CampusNotifyApp()));
 }
@@ -72,7 +75,9 @@ class _CampusNotifyAppState extends ConsumerState<CampusNotifyApp> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(pushServiceProvider).initialize();
+      if (!kIsWeb) {
+        ref.read(pushServiceProvider).initialize();
+      }
     });
   }
 
