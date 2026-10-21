@@ -158,18 +158,42 @@ Pada pertemuan kali ini saya mempelajari tentang konsep Git Flow dan strategi br
 ### Praktikum 3 — Static analysis dan mid review
 
 1. **Pemeriksaan Mesin (Clean Checks)**:
-   - `flutter analyze`
-   - `dart format --set-exit-if-changed .`
-   - `flutter test`
+   Sebelum meminta review atau melakukan integrasi kode, seluruh pemeriksaan mesin dijalankan secara lokal di direktori `07-week-7-clean-architecture/campus_notify`:
+   - `flutter analyze` : Memastikan tidak ada import mati (*unused import*), memastikan penggunaan `const` constructor, dan memastikan imutabilitas widget. Hasil: **0 issues found** (bersih).
+   - `dart format --set-exit-if-changed .` : Memastikan gaya penulisan kode seragam sesuai standar Dart.
+   - `flutter test` : Memastikan seluruh unit test pada domain use case berjalan sukses (100% passed).
 
-   <!-- Screenshot / Bukti eksekusi pemeriksaan mesin -->
-   ![Hasil static analysis dan test](screenshots/ci_checks.png)
+   <!-- Bukti eksekusi pemeriksaan mesin lokal -->
+   ![Hasil static analysis dan test](screenshots/Bersihkan_dengan_mesin.jpg)
 
 2. **Konfigurasi Continuous Integration (CI)**:
-   <!-- Tautan atau ringkasan file .github/workflows/ci.yml -->
+   Otomatisasi penolakan PR kotor (*gatekeeper*) diatur menggunakan GitHub Actions pada berkas [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) yang dibuat langsung pada antarmuka GitHub:
+
+   <!-- Bukti konfigurasi CI workflow di GitHub Actions -->
+   ![Konfigurasi GitHub Actions CI Workflow](screenshots/ci_workflow.png)
+   
+   Alur kerja workflow:
+   - **Trigger**: Berjalan otomatis pada setiap *event* `pull_request` (dan `push`) menuju cabang `develop` dan `main`.
+   - **Environment**: Menjalankan *runner* `ubuntu-latest` dengan dependensi Flutter SDK aktif.
+   - **Automated Steps**:
+     1. `actions/checkout@v4` : Mengambil kode dari repository.
+     2. `subosito/flutter-action@v2` : Mengonfigurasi lingkungan Flutter.
+     3. `flutter pub get` : Memasang dependensi proyek.
+     4. `dart format --set-exit-if-changed .` : Memvalidasi kerapian format kode.
+     5. `flutter analyze` : Menjalankan static analysis dan linter rules.
+     6. `flutter test` : Menjalankan automated unit test.
+   
+   Bila salah satu langkah pemeriksaan gagal (merah), GitHub Actions akan secara otomatis menggagalkan pull request sebelum sempat direview oleh manusia.
 
 3. **Status Kesiapan Tengah Semester**:
-   <!-- Ringkasan evaluasi kesiapan proyek tengah semester -->
+   Kesiapan proyek paruh semester dievaluasi dan dicatat secara komprehensif pada berkas [docs/review-checklist.md](docs/review-checklist.md).
+   
+   **Ringkasan Evaluasi Kesiapan**:
+   - **Arsitektur & Sterilitas**: Struktur *feature-first* Clean Architecture (`domain/`, `data/`, `presentation/`) terbukti steril dari import framework UI/SQLite/Dio/Firebase pada domain layer (lulus uji grep regex Minggu 7).
+   - **Mesin & Analisis**: `flutter analyze` bersih (0 issues), seluruh berkas terformat rapi dengan `dart format`.
+   - **Unit Testing**: Pengujian use case validasi judul pengumuman dan use case daftar pengumuman lulus 100% hijau.
+   - **Git Hygiene**: Mengadopsi Git Flow dengan cabang `develop`, PR #2 terfokus kecil (< 300 baris) menggunakan Conventional Commits, di-review sejawat secara terstruktur, dan di-merge dengan aman.
+   - **Dokumentasi**: Status paruh semester, panduan menjalankan, tautan issue/PR, serta artefak screenshot terdokumentasi lengkap.
 
 ---
 
@@ -244,9 +268,9 @@ jawab :
 
 ### 1. Status Paruh Semester & Peta Issue / PR
 - **Proyek yang Direview**: `campus_notify` (Clean Architecture)
-- **Tautan Issue**: `#`
-- **Tautan Pull Request**: `#`
-- **Cabang (Branch)**: `feature/...` $\rightarrow$ `develop`
+- **Tautan Issue**: [Issue #1: Validasi Judul Pengumuman Kosong](https://github.com/AnkaRezaa/254107023002-mobile-course/issues/1)
+- **Tautan Pull Request**: [PR #2: feat(announcements): validasi judul kosong + test](https://github.com/AnkaRezaa/254107023002-mobile-course/pull/2)
+- **Cabang (Branch)**: `feat/announcements-validation` $\rightarrow$ `develop` (Merged)
 
 ### 2. Fitur Utama Proyek
 1. 

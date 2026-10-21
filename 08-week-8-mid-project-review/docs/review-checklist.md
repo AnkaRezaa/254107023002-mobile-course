@@ -30,5 +30,5 @@ Dokumen ini berisi catatan audit riwayat Git, perbaikan pesan commit lama ke sta
 | **Analisis Statis Mesin** | `flutter analyze` bersih tanpa error maupun warning | Sesuai | 0 issue / clean pass. |
 | **Pengujian Unit Otomatis** | `flutter test` berjalan hijau (100% passed) | Sesuai | Pengujian domain use case menggunakan FakeRepository berhasil. |
 | **Kebersihan Kode** | `dart format` terformat rapi sesuai standar Dart | Sesuai | Seluruh file di-format dengan `dart format .`. |
-| **Disiplin Git Flow** | Menggunakan branch `develop` dan `feature/*`, PR kecil terfokus (< 300 baris) | Sedang Berjalan | Branch `develop` disiapkan untuk PR fitur baru. |
+| **Disiplin Git Flow** | Menggunakan branch `develop` dan `feature/*`, PR kecil terfokus (< 300 baris) | Sesuai | Branch `develop` aktif, PR #2 (< 300 baris) sukses di-review & di-merge, Issue #1 tertutup otomatis, dan branch fitur dihapus. |
 | **Dokumentasi & Portofolio** | README lengkap memuat status, screenshot, dan cara menjalankan | Sesuai | Panduan instalasi dan dokumentasi visual tersedia lengkap. |
