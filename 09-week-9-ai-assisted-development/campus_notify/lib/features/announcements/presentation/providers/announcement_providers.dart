@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/announcement_repository_impl.dart';
 import '../../domain/repositories/announcement_repository.dart';
 import '../../domain/usecases/get_announcements.dart';
+import '../../domain/usecases/search_announcements.dart';
 import '../../domain/entities/announcement.dart';
 
 final announcementRepositoryProvider = Provider<AnnouncementRepository>((ref) {
@@ -11,6 +12,10 @@ final announcementRepositoryProvider = Provider<AnnouncementRepository>((ref) {
 
 final getAnnouncementsProvider = Provider<GetAnnouncements>((ref) {
   return GetAnnouncements(ref.watch(announcementRepositoryProvider));
+});
+
+final searchAnnouncementsProvider = Provider<SearchAnnouncements>((ref) {
+  return const SearchAnnouncements();
 });
 
 final announcementsProvider = FutureProvider<List<Announcement>>((ref) async {
@@ -42,9 +47,9 @@ final filteredAnnouncementsProvider = Provider<AsyncValue<List<Announcement>>>((
 ) {
   final announcementsAsync = ref.watch(announcementsProvider);
   final query = ref.watch(announcementSearchQueryProvider);
+  final searchUseCase = ref.watch(searchAnnouncementsProvider);
 
   return announcementsAsync.whenData((list) {
-    if (query.isEmpty) return list;
-    return list.where((item) => item.title.contains(query)).toList();
+    return searchUseCase(items: list, query: query);
   });
 });
