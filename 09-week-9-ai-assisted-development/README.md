@@ -31,6 +31,9 @@ Dalam rekayasa perangkat lunak modern, AI generatif (seperti GitHub Copilot, Gem
 2. **Dokumentasi Log AI**:
    Seluruh prompt mentah dan potongan konteks kode dicatat secara transparan pada [`docs/ai_log.md`](docs/ai_log.md).
 
+3. **Dokumentasi Screenshot Prompt**:
+   ![Prompt Praktikum 1](screenshots/praktikum%201%20prompt.jpg)
+
 ---
 
 ## Praktikum 2 — Generate dan Verifikasi Search
@@ -44,8 +47,9 @@ Dalam rekayasa perangkat lunak modern, AI generatif (seperti GitHub Copilot, Gem
 2. **Verifikasi Awal**:
    - Memastikan ketiadaan error impor lintas-layer.
    - Memverifikasi 3 skenario pencarian manual: query kosong (semua muncul), query cocok (hanya item sesuai yang muncul), dan query tidak cocok (tampil empty state).
-   - Dokumentasi screenshot hasil prompt dan tampilan antarmuka:
+   - Dokumentasi screenshot hasil prompt dan pengujian awal:
      ![Hasil Prompt Pengumuman](screenshots/hasil%20prompt%20(pengumuman).jpg)
+     ![Flutter Test dan Flutter Analyze Praktikum 2](screenshots/flutter%20test%20dan%20flutter%20analyze%20praktikum%202.jpg)
 
 ---
 
@@ -67,6 +71,8 @@ Dalam rekayasa perangkat lunak modern, AI generatif (seperti GitHub Copilot, Gem
    ```
    Seluruh test berubah menjadi HIJAU (100% Passed).
 
+   ![Flutter Test dan Analyze Praktikum 3](screenshots/praktikum%203%20flutter%20test%20dan%20analyze.jpg)
+
 4. **Pemisahan 4 Layer Bersih**:
    - `Widget (UI Saja)`: `AnnouncementsPage`, `AnnouncementSearchBar`, `AnnouncementEmptyView`.
    - `Notifier (State Saja)`: `AnnouncementSearchQueryNotifier` & `filteredAnnouncementsProvider`.
@@ -84,6 +90,8 @@ Evaluasi kritis dilakukan terhadap saran AI senior dev yang dicatat lengkap di [
 | 1 | Pencarian hanya mencocokkan `title`, belum mencakup isi `body`. | Saran | **TERIMA (Accepted)** | Terbukti benar via inspeksi kode. Mahasiswa sering mengingat inti pengumuman di bagian isi. Diperbaiki dengan operator `||` ke `item.body` dan dibuktikan dengan unit test. |
 | 2 | Menghapus `filteredAnnouncementsProvider` dan memanggil use case langsung di dalam `build()` Widget. | Blocker | **TOLAK KERAS (Rejected)** | Melanggar prinsip *Clean Architecture* dan *Separation of Concerns*. Pemrosesan string di dalam `build()` merusak mekanisme caching Riverpod dan membebani rendering UI Flutter. |
 | 3 | Potensi desinkronisasi `TextEditingController` jika query diubah dari luar widget. | Saran | **TERIMA + REFACTOR** | Diselaraskan agar controller tetap sinkron terhadap state management jika terjadi reset query global. |
+
+![Hasil Test AI Challenge 9 Passed](screenshots/ai%20challenge%20flutter%20test%209%20passed.jpg)
 
 ---
 
@@ -173,3 +181,70 @@ Evaluasi kritis dilakukan terhadap saran AI senior dev yang dicatat lengkap di [
 - [x] **AI Challenge**: Minimal 1 temuan AI dibuktikan benar (body search) + 1 temuan ditolak beralasan teknis arsitektur.
 - [x] **Pemisahan 4 Layer**: Widget $\rightarrow$ Notifier $\rightarrow$ Use Case $\rightarrow$ Repository.
 - [x] **Penguasaan Materi**: Mampu menjelaskan seluruh alur dan keputusan teknis secara mandiri tanpa bantuan AI.
+
+
+---
+
+## Refleksi
+
+1. **Satu halusinasi AI apa yang Anda temukan dan bagaimana membuktikannya?**
+
+   **Jawab:**
+   Halusinasi yang paling signifikan adalah ketika AI menggenerasi properti palet warna `Colors.black89` pada komponen visual antarmuka serta masih merekomendasikan sintaksis `StateProvider<String>` yang telah dihapus (*deprecated/removed*) pada pustaka `flutter_riverpod: ^3.4.3`.
+   
+   Pembuktian dilakukan secara empiris melalui dua langkah:
+   - **Pemeriksaan Kompilasi & Dokumentasi SDK**: Melalui verifikasi kode sumber Flutter SDK (`Colors` class di `material/colors.dart`), terbukti bahwa konstanta `Colors.black89` tidak pernah terdefinisi (properti valid adalah `Colors.black87` atau `Colors.black54`).
+   - **Verifikasi Analisis Statis (`flutter analyze`)**: Ketika kode dieksekusi, compiler Dart melemparkan kesalahan fatal:
+     ```text
+     error: The getter 'black89' isn't defined for the class 'Colors'. (undefined_getter)
+     error: Undefined class 'StateProvider'. (undefined_class)
+     ```
+   Temuan ini membuktikan secara empiris bahwa model AI mengalami halusinasi identifikasi properti dan memiliki keterbatasan basis pengetahuan (*knowledge cutoff*) terhadap versi pustaka Riverpod terkini.
+
+2. **Prompt mana yang paling membantu dan apa yang Anda ubah?**
+
+   **Jawab:**
+   Prompt yang paling membantu adalah **Prompt 5-Slot** pada Praktikum 1 yang membatasi arsitektur:
+   ```text
+   tambahkan fitur search pada pengumuman.
+   arsitektur : presentation> domain < data
+   jangan panggil sql lite dari widget 
+   sertakan empty state + 1 widget test
+   konteks: implementasikan pada folder campus_notify...
+   ```
+   **Perubahan yang Dilakukan**:
+   Meskipun prompt awal berhasil membatasi penempatan file, luaran AI masih menghasilkan implementasi pencarian naif menggunakan `.contains(query)` di dalam provider UI yang bersifat *case-sensitive*. Saya mengubah dan mempertajam prompt pada Praktikum 3 dengan menyertakan instruksi pembuktian bug menggunakan metodologi pengujian merah (*test-driven debugging*):
+   ```text
+   1. Debug dengan test merah:
+      1. Reproduksi: langkah + input pemicu bug
+      2. Isolasi: pindah filter ke use case murni
+      3. Test merah: buat test gagal pembukti bug
+      4. Perbaiki kecil, jalankan test + analyze
+      5. Catat akar masalah di docs/ai-log.md
+   ```
+   Perubahan instruksi ini secara efektif mengalihkan proses dari sekadar meminta kode langsung menjadi proses perbaikan sistematis berbasis bukti kegagalan tes.
+
+3. **Satu refactor apa yang Anda lakukan pada kode AI?**
+
+   **Jawab:**
+   Refaktorisasi paling fundamental yang dilakukan adalah **mengisolasi logika filter pencarian dari lapisan Presentation ke dalam lapisan Domain murni** melalui use case [`SearchAnnouncements`](campus_notify/lib/features/announcements/domain/usecases/search_announcements.dart).
+   - **Sebelum Refactoring**: Logika komparasi string diletakkan secara langsung di dalam provider/widget presentasi dengan metode `items.where((item) => item.title.contains(query))`. Pendekatan ini melanggar *Separation of Concerns*, gagal menangani huruf kapital atau spasi berlebih, dan tidak dapat diuji secara independen dari framework.
+   - **Sesudah Refactoring**: Logika dipindahkan ke kelas use case murni Dart (*pure Dart* tanpa dependensi Flutter/Riverpod/SQLite), dinormalisasi menggunakan `query.trim().toLowerCase()`, serta diperluas untuk mencocokkan judul (`title`) maupun isi pengumuman (`body`). Komponen UI [`AnnouncementsPage`](campus_notify/lib/features/announcements/presentation/pages/announcement_page.dart) kini murni berfungsi sebagai penampil visual yang mengonsumsi use case melalui Riverpod.
+
+4. **Keputusan terima/tolak mana yang paling sulit?**
+
+   **Jawab:**
+   Keputusan paling krusial terjadi pada **Temuan 2 di sesi AI Prompt Challenge**, di mana AI mengusulkan untuk menghapus `filteredAnnouncementsProvider` dan memanggil use case `SearchAnnouncements` langsung di dalam method `build()` milik `AnnouncementsPage` dengan alasan "mengurangi *boilerplate* kode dan menyederhanakan pohon dependensi".
+
+   Keputusan penolakan ini membutuhkan ketegasan arsitektural:
+   - **Alasan Penolakan Keras**: Kendati usulan AI tampak praktis karena mengeliminasi satu lapisan provider, secara arsitektur Flutter tindakan tersebut merupakan *anti-pattern* yang merusak performa. Method `build()` dapat dipanggil puluhan kali per detik (misalnya saat proses render frame atau interaksi scroll). Menjalankan kalkulasi penyaringan list di dalam `build()` tanpa mekanisme *memoization/caching* bawaan Riverpod memicu pemborosan siklus komputasi (*unnecessary re-computation*).
+   - Penolakan terhadap rekomendasi AI senior dev ini menegaskan bahwa kemudahan penulisan kode sesaat (*less boilerplate*) tidak boleh mengorbankan integritas arsitektur dan efisiensi eksekusi aplikasi.
+
+---
+
+## Referensi
+
+1. **Dokumentasi Resmi Flutter**: [Testing Flutter Apps](https://docs.flutter.dev/testing)
+2. **Dokumentasi Resmi Riverpod**: [Riverpod 3.0 Migration & Notifiers](https://riverpod.dev/docs/concepts/providers)
+3. **Martin Fowler**: [Clean Architecture & Test-Driven Development (TDD)](https://martinfowler.com/bliki/TestDrivenDevelopment.html)
+4. **Modul Perkuliahan Pemrograman Mobile Minggu 9**: *AI-Assisted Development / Vibe Coding*, Jurusan Teknologi Informasi, Politeknik Negeri Malang.
