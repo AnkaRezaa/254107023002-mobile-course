@@ -11,8 +11,10 @@ class SearchAnnouncements {
     if (trimmedQuery.isEmpty) {
       return items;
     }
-    return items
-        .where((item) => item.title.toLowerCase().contains(trimmedQuery))
-        .toList();
+    return items.where((item) {
+      final matchesTitle = item.title.toLowerCase().contains(trimmedQuery);
+      final matchesBody = item.body.toLowerCase().contains(trimmedQuery);
+      return matchesTitle || matchesBody;
+    }).toList();
   }
 }

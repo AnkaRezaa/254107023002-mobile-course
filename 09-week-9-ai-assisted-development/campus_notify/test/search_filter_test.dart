@@ -42,6 +42,16 @@ void main() {
       expect(result.first.title, contains('Beasiswa'));
     });
 
+    test('pencarian menemukan pengumuman berdasarkan isi konten (body)', () {
+      final result = searchUseCase(
+        items: sampleAnnouncements,
+        query: 'perkuliahan',
+      );
+      expect(result, hasLength(1));
+      expect(result.first.id, 3);
+      expect(result.first.body, contains('perkuliahan'));
+    });
+
     test('query kosong mengembalikan seluruh data pengumuman', () {
       final result = searchUseCase(items: sampleAnnouncements, query: '');
       expect(result, hasLength(3));
