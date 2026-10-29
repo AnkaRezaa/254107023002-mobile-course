@@ -143,6 +143,20 @@ class HomePage extends ConsumerWidget {
               },
             ),
           ),
+          const SizedBox(height: 12),
+          Card(
+            elevation: 2,
+            color: Colors.deepPurple.shade50,
+            child: ListTile(
+              leading: const Icon(Icons.smart_toy_rounded, color: Colors.deepPurple, size: 28),
+              title: const Text('Tanya Asisten AI', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Chat cerdas seputar jadwal & info kampus'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                context.push('/chat');
+              },
+            ),
+          ),
         ],
       ),
     );

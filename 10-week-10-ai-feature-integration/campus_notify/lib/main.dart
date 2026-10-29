@@ -10,6 +10,7 @@ import 'core/providers.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'pages/home_page.dart';
 import 'features/announcements/presentation/pages/announcement_page.dart';
+import 'features/chat/chat_screen.dart';
 import 'routes.dart';
 
 void main() async {
@@ -44,6 +45,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.announcement,
         builder: (_, s) => const AnnouncementsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.chat,
+        builder: (_, s) => const ChatScreen(),
       ),
     ],
   );
