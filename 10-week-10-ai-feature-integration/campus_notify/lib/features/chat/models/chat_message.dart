@@ -4,6 +4,7 @@ class ChatMessage {
   final bool isUser;
   final DateTime timestamp;
   final bool isLoading;
+  final String? imagePath;
 
   const ChatMessage({
     required this.id,
@@ -11,6 +12,7 @@ class ChatMessage {
     required this.isUser,
     required this.timestamp,
     this.isLoading = false,
+    this.imagePath,
   });
 
   ChatMessage copyWith({
@@ -19,6 +21,7 @@ class ChatMessage {
     bool? isUser,
     DateTime? timestamp,
     bool? isLoading,
+    String? imagePath,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -26,6 +29,7 @@ class ChatMessage {
       isUser: isUser ?? this.isUser,
       timestamp: timestamp ?? this.timestamp,
       isLoading: isLoading ?? this.isLoading,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 }
