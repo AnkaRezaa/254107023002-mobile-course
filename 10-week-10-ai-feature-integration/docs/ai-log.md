@@ -162,3 +162,41 @@ Pencahayaan ruangan sangat terang dengan pendingin udara (AC) yang terpasang di 
 #### D. Evaluasi & Verifikasi Image Understanding
 * **Kedalaman Deskripsi Objek**: ✅ Mengidentifikasi komponen perangkat keras komputer, fasilitas perkuliahan, dan atmosfer ruangan secara rinci.
 * **Manfaat Aksesibilitas**: ✅ Deskripsi naratif yang kaya memberikan kemudahan bagi pengguna berkebutuhan khusus dalam memahami isi visual lingkungan fisik kampus.
+
+---
+
+## 5. Privasi, Biaya, Error Handling, dan Fallback
+
+### 1. Tabel Matriks Risiko dan Mitigasi
+
+| Risiko Operasional | Dampak | Mitigasi yang Diimplementasikan |
+|---|---|---|
+| **Bocor data pengguna** | Pelanggaran regulasi privasi & kebocoran data rahasia mahasiswa. | Mencegat di sisi klien (*client-side guardrails*) dengan validasi Regex (NIK 16-digit, Nomor Telepon, Email, dan Kata Sandi) sebelum permintaan dikirim ke AI API. |
+| **Biaya melonjak** | Konsumsi kuota API berlebih akibat spam atau pertanyaan berulang. | Menerapkan kuota harian (*rate limit* 20 permintaan/hari per pengguna) serta *Local Memory Caching* untuk pertanyaan yang sama (0 biaya token). |
+| **API error / down** | Antarmuka aplikasi *freeze* atau crash saat terjadi kendala jaringan/server. | Menangkap exception dengan pesan ramah pengguna, opsi tombol *Coba Lagi*, serta *AlertDialog* rekomendasi *Mode Offline*. |
+| **Respons tidak relevan / halusinasi** | Mahasiswa mendapatkan informasi akademik keliru. | Menyediakan *CampusLocalKnowledgeBase* offline berisi data resmi kampus (KRS, UKT, Beasiswa, Perpustakaan, SIAKAD) sebagai fallback otomatis. |
+
+### 2. Implementasi Fallback Dialog
+```dart
+try {
+  final response = await aiService.ask(question);
+} catch (e) {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Layanan AI Sibuk'),
+      content: const Text('Coba lagi nanti atau gunakan mode offline.'),
+      actions: [
+        TextButton(
+          onPressed: () => notifier.retryLastMessage(),
+          child: const Text('Coba Lagi'),
+        ),
+        ElevatedButton(
+          onPressed: () => notifier.useOfflineFallback(),
+          child: const Text('Gunakan Mode Offline'),
+        ),
+      ],
+    ),
+  );
+}
+```
