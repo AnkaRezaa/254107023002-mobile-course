@@ -90,3 +90,16 @@ Setelah aplikasi berjalan di HP, Flutter DevTools dibuka pada tab **Performance*
    * Tidak adanya batas isolasi pengecatan grafis (`RepaintBoundary`) pada item daftar sehingga seluruh canvas dirender ulang saat berinteraksi.
    * Widget subtree di-rebuild secara berulang tanpa konstruktor `const` dan pemisahan state granular.
 
+---
+
+### Langkah 2: Identifikasi Masalah
+
+Berdasarkan analisis hasil profiling pada perangkat Android fisik, teridentifikasi 4 masalah performa utama (didokumentasikan secara rinci di [docs/performance-findings.md](docs/performance-findings.md)):
+
+| No | Kategori Masalah | Indikator DevTools | Dampak Performa | Rencana Solusi |
+|---|---|---|---|---|
+| 1 | **Widget Rebuild Berlebih & Tanpa RepaintBoundary** | Flame Chart / Frame Chart (Jank > 27 ms pada frame awal) | Beban berlebih pada UI Thread & GPU repainting seluruh canvas | Ekstraksi widget mandiri, `const`, Riverpod `select`, dan `RepaintBoundary` |
+| 2 | **Penanganan Gambar Tanpa Batasan Memori** | Raster Thread & Memory Monitor | Potensi lonjakan heap memori native saat memuat foto kamera/dokumen | Pembatasan resolusi decoding memori (`cacheWidth/Height`) |
+| 3 | **Request API Berulang Tanpa Cache** | Network Profiler / Latency Loading | Delay render data dan beban I/O jaringan berlebih | Pola *Stale-While-Revalidate* (SWR) pada Repository dan Retry Interceptor |
+| 4 | **Ketiadaan List Pagination** | Layout duration saat scrolling dataset | Seluruh data dimuat sekaligus ke memori | Penerapan *infinite scroll* dengan `ScrollController` |
+
