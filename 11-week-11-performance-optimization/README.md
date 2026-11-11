@@ -44,7 +44,7 @@ UI Thread (Dart)               Raster Thread (GPU)
 
 ---
 
-## 2. Flutter DevTools: Profiling CPU dan Memori
+## 3. Flutter DevTools: Profiling CPU dan Memori
 
 Profiling performa akurat wajib dilakukan menggunakan mode **Profile** (`flutter run --profile`), bukan Debug (memiliki overhead debugging) maupun Release (data simbolik di-strip):
 
@@ -62,3 +62,31 @@ flutter run --profile
    * **Heap Size & Used Memory**: Melacak memori Dart dan native memory.
    * **GC Events**: Garbage collection frequency.
    * **Heap Snapshot & Diffing**: Mengidentifikasi memory leak saat navigasi bolak-balik antar layar.
+
+---
+
+## 7. Praktikum: Optimasi Performa Aplikasi Nyata
+
+### Langkah 1: Baseline Profiling (Sebelum Optimasi)
+
+Pengujian performa baseline dilakukan pada perangkat riil Android (`arm64 (64 bit) android` - Xiaomi `2201117TY`) dengan rendering engine **Impeller** menggunakan perintah:
+
+```powershell
+flutter run -d 2201117TY --profile
+```
+
+Setelah aplikasi berjalan di HP, Flutter DevTools dibuka pada tab **Performance** untuk merekam aktivitas render dan frame budget:
+* **Skenario Pengujian**: Membuka halaman Beranda, navigasi ke daftar pengumuman, melakukan scroll naik-turun cepat, membuka detail pengumuman, kembali ke beranda, dan pull-to-refresh.
+* **Hasil Tangkapan Layar Profiling Baseline**:
+
+![Baseline Profiling (Before)](screenshots/before-profile.png)
+
+#### Analisis Metrik Baseline:
+1. **Target Frame Budget**: Garis horizontal **60 FPS** (16,67 ms/frame).
+2. **Indikasi Jank (Slow Frame)**:
+   * Terdeteksi lonjakan frame merah pekat (*slow frame*) pada awal render yang mencapai **> 27 ms hingga 32 ms**, melampaui batas anggaran 16,67 ms (terjadi *frame drop* / *jank*).
+   * Frame Time UI Thread (Dart) dan Raster Thread (GPU) menumpuk tinggi pada inisialisasi pohon widget.
+3. **Temuan Masalah (Bottleneck)**:
+   * Tidak adanya batas isolasi pengecatan grafis (`RepaintBoundary`) pada item daftar sehingga seluruh canvas dirender ulang saat berinteraksi.
+   * Widget subtree di-rebuild secara berulang tanpa konstruktor `const` dan pemisahan state granular.
+
