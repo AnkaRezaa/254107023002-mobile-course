@@ -151,5 +151,26 @@ Setelah seluruh teknik optimasi diimplementasikan, aplikasi diuji kembali pada p
 | **Konsumsi Memori Gambar** | Full decoding resolution | Terkompresi (`cacheWidth: 300`) | Mencegah lonjakan heap memory dari gambar besar |
 | **Responsivitas Data** | Delay I/O jaringan berulang | Instan via *Stale-While-Revalidate* cache | Data lokal langsung tampil tanpa jeda |
 
+---
+
+### Langkah 5: Memory Profiling
+
+Pengujian memori dilakukan menggunakan tab **Memory** di Flutter DevTools pada HP Android nyata untuk mendeteksi potensi kebocoran memori (*memory leak*):
+
+1. **Skenario Pengujian**:
+   * Mengambil **Heap Snapshot 1** pada halaman daftar pengumuman.
+   * Melakukan navigasi buka dialog detail pengumuman $\rightarrow$ tutup detail $\rightarrow$ diulang sebanyak **5 kali**.
+   * Mengambil **Heap Snapshot 2** dan melakukan analisis perbandingan (*Diff Snapshots*).
+
+2. **Hasil Tangkapan Layar Memory Profiling & Diff Snapshots**:
+
+![Memory Profiling](screenshots/memory-profile.png)
+
+3. **Temuan & Analisis Memori**:
+   * **Stabilitas Dart Heap**: Ukuran memori Dart sangat stabil di angka **16.4 MB** (Reachable: **13.8 MB**), dengan Snapshot 1 (**13.3 MB**) dan Snapshot 2 (**13.8 MB**). Grafik alokasi memori (garis biru) tetap datar dan stabil, dan lonjakan kecil saat navigasi langsung dibersihkan oleh Garbage Collector (terlihat 2 event GC bertanda hijau).
+   * **Analisis Diff Snapshot**: Instance objek seperti `ConsumerStatefulElement`, `ProviderContainer`, dan `ProviderPointerManager` memiliki retained size sebesar **0%**, membuktikan tidak ada penumpukan objek yang tertahan di memori.
+   * **Pembersihan Resource di `dispose()`**: Controller seperti `ScrollController` pada daftar pengumuman dan `TextEditingController` pada chat dibersihkan dengan benar di method `dispose()`, memastikan Garbage Collector (GC) dapat membebaskan memori tanpa kebocoran.
+
+
 
 

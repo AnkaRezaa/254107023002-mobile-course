@@ -265,6 +265,21 @@ class AnnouncementTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(announcement.body),
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: Text(announcement.title),
+              content: Text(announcement.body),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Tutup'),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

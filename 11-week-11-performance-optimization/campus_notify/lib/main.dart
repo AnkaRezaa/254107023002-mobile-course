@@ -43,6 +43,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginPage()),
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
       GoRoute(
+        path: '/announcements',
+        builder: (_, s) => const AnnouncementsPage(),
+      ),
+      GoRoute(
         path: AppRoutes.announcement,
         builder: (_, s) => const AnnouncementsPage(),
       ),
