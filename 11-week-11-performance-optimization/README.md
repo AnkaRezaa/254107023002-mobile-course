@@ -79,7 +79,7 @@ Setelah aplikasi berjalan di HP, Flutter DevTools dibuka pada tab **Performance*
 * **Skenario Pengujian**: Membuka halaman Beranda, navigasi ke daftar pengumuman, melakukan scroll naik-turun cepat, membuka detail pengumuman, kembali ke beranda, dan pull-to-refresh.
 * **Hasil Tangkapan Layar Profiling Baseline**:
 
-![Baseline Profiling (Before)](screenshots/before-profile.png)
+![Baseline Profiling (Before)](screenshot/before-profile.png)
 
 #### Analisis Metrik Baseline:
 1. **Target Frame Budget**: Garis horizontal **60 FPS** (16,67 ms/frame).
@@ -137,7 +137,7 @@ Setelah seluruh teknik optimasi diimplementasikan, aplikasi diuji kembali pada p
 
 | Sebelum Optimasi (Baseline) | Sesudah Optimasi (Verified After) |
 |:---:|:---:|
-| ![Sebelum Optimasi](screenshots/before-profile.png) | ![Sesudah Optimasi](screenshots/after-profile.png) |
+| ![Sebelum Optimasi](screenshot/before-profile.png) | ![Sesudah Optimasi](screenshot/after-profile.png) |
 
 #### Tabel Perbandingan Metrik Performa (Before vs After):
 
@@ -164,12 +164,75 @@ Pengujian memori dilakukan menggunakan tab **Memory** di Flutter DevTools pada H
 
 2. **Hasil Tangkapan Layar Memory Profiling & Diff Snapshots**:
 
-![Memory Profiling](screenshots/memory-profile.png)
+![Memory Profiling](screenshot/memory-profile.png)
 
 3. **Temuan & Analisis Memori**:
    * **Stabilitas Dart Heap**: Ukuran memori Dart sangat stabil di angka **16.4 MB** (Reachable: **13.8 MB**), dengan Snapshot 1 (**13.3 MB**) dan Snapshot 2 (**13.8 MB**). Grafik alokasi memori (garis biru) tetap datar dan stabil, dan lonjakan kecil saat navigasi langsung dibersihkan oleh Garbage Collector (terlihat 2 event GC bertanda hijau).
    * **Analisis Diff Snapshot**: Instance objek seperti `ConsumerStatefulElement`, `ProviderContainer`, dan `ProviderPointerManager` memiliki retained size sebesar **0%**, membuktikan tidak ada penumpukan objek yang tertahan di memori.
    * **Pembersihan Resource di `dispose()`**: Controller seperti `ScrollController` pada daftar pengumuman dan `TextEditingController` pada chat dibersihkan dengan benar di method `dispose()`, memastikan Garbage Collector (GC) dapat membebaskan memori tanpa kebocoran.
+
+---
+
+## 8. Tugas dan Refleksi
+
+### A. Bukti Mesin Hijau (Green Machine Proof)
+
+Semua pengujian otomatis dan analisis statis kode berjalan 100% bersih tanpa peringatan (*zero issues*) dan seluruh test suite lulus:
+
+#### 1. Hasil `flutter analyze`:
+```text
+Analyzing campus_notify...
+No issues found! (ran in 4.7s)
+```
+
+#### 2. Hasil `flutter test`:
+```text
+00:00 +0: loading test/announcement_empty_widget_test.dart
+00:00 +15: loading test/chat_screen_widget_test.dart
+00:01 +20: ChatScreen Widget Tests dapat beralih ke Mode Offline dan menampilkan banner offline
+00:02 +21: ChatScreen Widget Tests menampilkan AlertDialog Layanan AI Sibuk dan tombol fallback offline
+00:02 +22: All tests passed!
+```
+
+---
+
+### B. Refleksi Pembelajaran
+
+#### 1. Optimasi mana yang memberikan dampak terbesar dan mengapa?
+> **Jawaban**:  
+> Optimasi yang memberikan dampak terbesar adalah **penerapan `RepaintBoundary` yang dikombinasikan dengan ekstraksi widget mandiri (`const` constructor)** pada item daftar (`AnnouncementTile`) dan pesan obrolan (`ChatMessageBubble`).  
+> **Alasannya**: Sebelum optimasi, interaksi scrolling memaksa engine rendering GPU mengecat ulang (*repaint*) seluruh kanvas layar secara berulang, dan Dart merekonstruksi ratusan baris widget tree. Hal ini mengakibatkan lonjakan durasi frame hingga **> 27–32 ms (jank berat)** pada frame awal. Setelah item dibungkus `RepaintBoundary`, GPU mengisolasi layer grafis per-item sehingga repaint hanya terjadi pada area yang benar-benar berubah pikselnya. Hasilnya, frame time saat scroll aktif turun drastis ke kisaran **2 ms – 5 ms**, meniadakan frame drop, dan menstabilkan frame rate pada **60 FPS**.
+
+#### 2. Bagaimana Anda memverifikasi bahwa optimasi benar-benar bekerja (bukan placebo)?
+> **Jawaban**:  
+> Verifikasi dilakukan secara empiris dan kuantitatif menggunakan **Flutter DevTools (Tab Performance & Frame Chart)** pada perangkat fisik Android nyata (`arm64 android` — Xiaomi `2201117TY`) dalam mode resmi `--profile`:
+> 1. **Perbandingan Metrik Nyata**: Pada baseline awal (`before-profile.png`), terbukti terdapat bar merah pekat *Jank (slow frame)* setinggi 27–32 ms. Pada pengujian ulang sesudah optimasi (`after-profile.png`), **0 bar merah jank** terdeteksi selama scrolling aktif dan rata-rata frame time berada konsisten di angka 2–5 ms (jauh di bawah batas 16,67 ms).
+> 2. **Pengujian Memori & Bebas Leak**: Melalui fitur *Diff Snapshots* di tab Memory DevTools (`memory-profile.png`), terbukti Dart Heap stabil pada 16.4 MB dengan retained size 0%, membuktikan tidak ada akumulasi objek setelah 5 kali navigasi bolak-balik.
+> 3. **Integritas Fungsionalitas**: Menjalankan automated test suite `flutter test` yang memastikan seluruh **22/22 unit dan widget tests** tetap lulus 100% tanpa ada regresi fitur.
+
+#### 3. Trade-off apa yang Anda hadapi (misalnya kompleksitas kode vs performa)?
+> **Jawaban**:  
+> * **Kompleksitas Kode & Fragmentasi File**: Memecah widget monolitik menjadi kelas-kelas mandiri (`AuthStatusCard`, `FcmTokenCard`, `AnnouncementTile`, dsb.) membuat jumlah baris kode bertambah dan struktur file menjadi lebih banyak.
+> * **Overhead Memori Layer GPU**: Penambahan `RepaintBoundary` membutuhkan alokasi memori layer grafis terpisah pada GPU. Jika diterapkan secara berlebihan pada widget statis kecil, justru akan membebani memori native. Oleh karena itu, trade-off ini dikelola dengan hanya memasang `RepaintBoundary` pada subtree dinamis yang bergerak/berulang (seperti item list dan animasi chat).
+> * **Granularitas State Riverpod**: Menggunakan selector `ref.watch(provider.select(...))` membutuhkan penulisan closure seleksi yang lebih spesifik, namun sebanding dengan penghematan rebuild cycle pada UI Thread.
+
+#### 4. Kapan sebaiknya optimasi premature dihindari?
+> **Jawaban**:  
+> Optimasi premature (*Premature Optimization*) sebaiknya dihindari pada tahap awal eksplorasi (prototyping) atau ketika kebutuhan bisnis aplikasi masih belum stabil. Menerapkan micro-optimization (seperti caching berlebih, pemecahan widget ekstrem, atau manipulasi layer render) sebelum ada bukti profiling nyata justru akan memperlambat kecepatan pengembangan (*development velocity*), membuat kode sulit dibaca, dan memperbesar risiko munculnya bug baru.  
+> Prinsip rekayasa perangkat lunak terbaik adalah: **"Make it work, make it right, make it fast"** — bangun fungsionalitas dengan Clean Architecture terlebih dahulu, uji dan profil menggunakan DevTools mode Profile, lalu terapkan optimasi terukur hanya pada bagian yang terbukti secara empiris menjadi *bottleneck*.
+
+---
+
+### C. Referensi Pendukung
+
+* [Slide Week 11: Optimasi Performa Flutter](https://jti-polinema.github.io/flutter-codelab/00-slides/Week_11_Performance_Optimization.html)
+* [Flutter DevTools Documentation](https://docs.flutter.dev/tools/devtools/overview)
+* [Flutter UI Performance & Rendering Pipeline](https://docs.flutter.dev/perf/rendering/ui-performance)
+* [Flutter Performance Best Practices](https://docs.flutter.dev/perf/best-practices)
+* [Riverpod Scoped State Selectors](https://riverpod.dev/docs/concepts/reading)
+* [Learn Dart in Y Minutes](https://learnxinyminutes.com/dart/)
+* [Dart Language Tour](https://dart.dev/guides/language/language-tour)
+
 
 
 
