@@ -103,3 +103,28 @@ Berdasarkan analisis hasil profiling pada perangkat Android fisik, teridentifika
 | 3 | **Request API Berulang Tanpa Cache** | Network Profiler / Latency Loading | Delay render data dan beban I/O jaringan berlebih | Pola *Stale-While-Revalidate* (SWR) pada Repository dan Retry Interceptor |
 | 4 | **Ketiadaan List Pagination** | Layout duration saat scrolling dataset | Seluruh data dimuat sekaligus ke memori | Penerapan *infinite scroll* dengan `ScrollController` |
 
+---
+
+### Langkah 3: Terapkan Optimasi
+
+Sesuai rencana, 4 teknik optimasi performa telah diimplementasikan pada kode aplikasi:
+
+1. **Mengurangi Rebuild & Repaint (`home_page.dart` & `chat_screen.dart`)**:
+   * **`const` Constructor**: Menambahkan konstruktor konstan pada elemen UI statis.
+   * **Ekstraksi Widget**: Memecah halaman `HomePage` menjadi kartu kecil mandiri (`AuthStatusCard`, `FcmTokenCard`, `AnnouncementNavCard`, `AiAssistantNavCard`).
+   * **`RepaintBoundary`**: Membungkus setiap `AnnouncementTile` dan `ChatMessageBubble` untuk mengisolasi layer render GPU saat scroll atau update pesan chat.
+   * **Riverpod `select`**: Mengganti `ref.watch(provider)` menjadi selector `ref.watch(fcmTokenProvider.select((t) => t))` dan `ref.watch(chatNotifierProvider.select(...))` agar hanya widget bersangkutan yang di-rebuild saat nilai field-nya berubah.
+   * **Tear-off Callback**: Menggunakan `_onLogout` menggantikan anonymous closure pada event listener.
+
+2. **Lazy Loading & Pagination (`announcement_page.dart`)**:
+   * Menggunakan `ScrollController` listener untuk mendeteksi posisi scroll saat pengguna mendekati 100px dari dasar daftar.
+   * Memuat data bertahap (*batch loading*) dan menampilkan indikator loading (*footer spinner*) saat data berikutnya diambil.
+
+3. **Optimasi Gambar & Memori (`chat_screen.dart`)**:
+   * Menambahkan pembatasan ukuran memori decoding piksel (`cacheWidth: 300`, `cacheHeight: 300`) pada `Image.file` dan `Image.network` untuk pratinjau lampiran chat/dokumen OCR, mencegah konsumsi RAM berlebih dari foto kamera resolusi tinggi.
+
+4. **Repository Caching - Stale-While-Revalidate (`announcement_repository_impl.dart`)**:
+   * Menerapkan in-memory cache dengan TTL (Time-To-Live) 5 menit.
+   * Data dari cache lokal langsung disajikan tanpa jeda I/O jaringan, dan cache di-invalidate otomatis saat ada penambahan data baru.
+
+

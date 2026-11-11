@@ -313,63 +313,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
 
-          // Banner Status Mode Offline / Kuota & Privasi
-          if (chatState.isOfflineMode)
-            Container(
-              width: double.infinity,
-              color: Colors.amber.shade100,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  const Icon(Icons.offline_bolt_rounded, size: 18, color: Colors.amber),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Mode Offline Aktif — Menjawab otomatis dari data lokal kampus tanpa kuota & bebas biaya.',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        ref.read(chatNotifierProvider.notifier).toggleOfflineMode(),
-                    child: const Text('Mode Online'),
-                  ),
-                ],
-              ),
-            )
-          else
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              color: Colors.grey.shade50,
-              child: Row(
-                children: [
-                  const Icon(Icons.shield_outlined, size: 14, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  const Expanded(
-                    child: Text(
-                      'Privasi Terjaga: Sistem memproteksi NIK, HP, Email & Sandi.',
-                      style: TextStyle(fontSize: 11, color: Colors.grey),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Sisa Kuota: ${chatState.dailyQuotaRemaining}/${chatState.dailyQuotaTotal}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: chatState.dailyQuotaRemaining > 5
-                          ? Colors.deepPurple
-                          : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          // Banner Status Mode Offline / Kuota & Privasi (Dioptimasi dengan Riverpod select)
+          const RepaintBoundary(child: ChatPrivacyQuotaBanner()),
 
           // Daftar Pesan Chat
           Expanded(
@@ -379,7 +324,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final message = messages[index];
-                return _buildMessageBubble(message);
+                return RepaintBoundary(
+                  child: ChatMessageBubble(message: message),
+                );
               },
             ),
           ),
@@ -407,109 +354,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
           // Area Input Teks Terintegrasi (Kamera OCR, Mic STT, Text Input)
           _buildInputArea(chatState),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageBubble(ChatMessage message) {
-    final isUser = message.isUser;
-    final isBotLoading = !isUser && message.isLoading && message.text.isEmpty;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isUser) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.deepPurple.shade100,
-              child: const Icon(Icons.smart_toy_rounded,
-                  size: 18, color: Colors.deepPurple),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isUser ? Colors.deepPurple : Colors.grey.shade100,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUser ? 16 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 16),
-                ),
-                border: isUser ? null : Border.all(color: Colors.grey.shade300),
-              ),
-              child: Column(
-                crossAxisAlignment:
-                    isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  // Pratinjau Gambar jika pesan memiliki lampiran gambar
-                  if (message.imagePath != null) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        constraints: const BoxConstraints(maxHeight: 180),
-                        child: kIsWeb
-                            ? Image.network(message.imagePath!, fit: BoxFit.cover)
-                            : Image.file(File(message.imagePath!), fit: BoxFit.cover),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-
-                  if (isBotLoading)
-                    const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Mengetik...',
-                          style: TextStyle(
-                              color: Colors.black54, fontStyle: FontStyle.italic),
-                        ),
-                      ],
-                    )
-                  else
-                    SelectableText(
-                      message.text +
-                          (!isUser && message.isLoading ? ' ▌' : ''),
-                      style: TextStyle(
-                        color: isUser ? Colors.white : Colors.black87,
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
-                    ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
-                    style: TextStyle(
-                      color: isUser ? Colors.white70 : Colors.black38,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (isUser) ...[
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.deepPurple.shade700,
-              child: const Icon(Icons.person, size: 18, color: Colors.white),
-            ),
-          ],
         ],
       ),
     );
@@ -593,6 +437,198 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Widget banner kuota & privasi yang diisolasi dengan Riverpod select
+class ChatPrivacyQuotaBanner extends ConsumerWidget {
+  const ChatPrivacyQuotaBanner({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isOffline =
+        ref.watch(chatNotifierProvider.select((s) => s.isOfflineMode));
+    final dailyQuotaRemaining =
+        ref.watch(chatNotifierProvider.select((s) => s.dailyQuotaRemaining));
+    final dailyQuotaTotal =
+        ref.watch(chatNotifierProvider.select((s) => s.dailyQuotaTotal));
+
+    if (isOffline) {
+      return Container(
+        width: double.infinity,
+        color: Colors.amber.shade100,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.offline_bolt_rounded, size: 18, color: Colors.amber),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Mode Offline Aktif — Menjawab otomatis dari data lokal kampus tanpa kuota & bebas biaya.',
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87),
+              ),
+            ),
+            TextButton(
+              onPressed: () =>
+                  ref.read(chatNotifierProvider.notifier).toggleOfflineMode(),
+              child: const Text('Mode Online'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      color: Colors.grey.shade50,
+      child: Row(
+        children: [
+          const Icon(Icons.shield_outlined, size: 14, color: Colors.grey),
+          const SizedBox(width: 4),
+          const Expanded(
+            child: Text(
+              'Privasi Terjaga: Sistem memproteksi NIK, HP, Email & Sandi.',
+              style: TextStyle(fontSize: 11, color: Colors.grey),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Sisa Kuota: $dailyQuotaRemaining/$dailyQuotaTotal',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: dailyQuotaRemaining > 5 ? Colors.deepPurple : Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Widget bubble chat yang diisolasi dengan RepaintBoundary & Image Memory Caching
+class ChatMessageBubble extends StatelessWidget {
+  const ChatMessageBubble({super.key, required this.message});
+
+  final ChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUser = message.isUser;
+    final isBotLoading = !isUser && message.isLoading && message.text.isEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!isUser) ...[
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.deepPurple.shade100,
+              child: const Icon(Icons.smart_toy_rounded,
+                  size: 18, color: Colors.deepPurple),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isUser ? Colors.deepPurple : Colors.grey.shade100,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(isUser ? 16 : 4),
+                  bottomRight: Radius.circular(isUser ? 4 : 16),
+                ),
+                border: isUser ? null : Border.all(color: Colors.grey.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  // Pratinjau Gambar dioptimasi memori: cacheWidth/cacheHeight membatasi ukuran decoding
+                  if (message.imagePath != null) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        constraints: const BoxConstraints(maxHeight: 180),
+                        child: kIsWeb
+                            ? Image.network(
+                                message.imagePath!,
+                                fit: BoxFit.cover,
+                                cacheWidth: 300,
+                                cacheHeight: 300,
+                              )
+                            : Image.file(
+                                File(message.imagePath!),
+                                fit: BoxFit.cover,
+                                cacheWidth: 300,
+                                cacheHeight: 300,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+
+                  if (isBotLoading)
+                    const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Mengetik...',
+                          style: TextStyle(
+                              color: Colors.black54, fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                    )
+                  else
+                    SelectableText(
+                      message.text +
+                          (!isUser && message.isLoading ? ' ▌' : ''),
+                      style: TextStyle(
+                        color: isUser ? Colors.white : Colors.black87,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                    style: TextStyle(
+                      color: isUser ? Colors.white70 : Colors.black38,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isUser) ...[
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.deepPurple.shade700,
+              child: const Icon(Icons.person, size: 18, color: Colors.white),
+            ),
+          ],
+        ],
       ),
     );
   }

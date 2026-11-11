@@ -165,28 +165,107 @@ class ErrorView extends StatelessWidget {
   }
 }
 
-class AnnouncementsList extends StatelessWidget {
+class AnnouncementsList extends StatefulWidget {
   const AnnouncementsList(this.announcements, {super.key});
   final List<Announcement> announcements;
 
   @override
+  State<AnnouncementsList> createState() => _AnnouncementsListState();
+}
+
+class _AnnouncementsListState extends State<AnnouncementsList> {
+  final ScrollController _scrollController = ScrollController();
+  int _visibleCount = 10;
+  bool _isLoadingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _visibleCount =
+        widget.announcements.length > 10 ? 10 : widget.announcements.length;
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didUpdateWidget(covariant AnnouncementsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.announcements.length != widget.announcements.length) {
+      _visibleCount =
+          widget.announcements.length > 10 ? 10 : widget.announcements.length;
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 100 &&
+        !_isLoadingMore &&
+        _visibleCount < widget.announcements.length) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          setState(() {
+            _visibleCount =
+                (_visibleCount + 5).clamp(0, widget.announcements.length);
+            _isLoadingMore = false;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final displayItems = widget.announcements.take(_visibleCount).toList();
+
     return ListView.builder(
-      itemCount: announcements.length,
+      controller: _scrollController,
+      itemCount: displayItems.length + (_isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
-        final item = announcements[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: ListTile(
-            leading: const Icon(Icons.campaign, color: Colors.deepPurple),
-            title: Text(
-              item.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+        if (index == displayItems.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.0),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
-            subtitle: Text(item.body),
-          ),
+          );
+        }
+        return RepaintBoundary(
+          child: AnnouncementTile(announcement: displayItems[index]),
         );
       },
+    );
+  }
+}
+
+class AnnouncementTile extends StatelessWidget {
+  const AnnouncementTile({super.key, required this.announcement});
+
+  final Announcement announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListTile(
+        leading: const Icon(Icons.campaign, color: Colors.deepPurple),
+        title: Text(
+          announcement.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(announcement.body),
+      ),
     );
   }
 }
