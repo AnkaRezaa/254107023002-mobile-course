@@ -127,4 +127,29 @@ Sesuai rencana, 4 teknik optimasi performa telah diimplementasikan pada kode apl
    * Menerapkan in-memory cache dengan TTL (Time-To-Live) 5 menit.
    * Data dari cache lokal langsung disajikan tanpa jeda I/O jaringan, dan cache di-invalidate otomatis saat ada penambahan data baru.
 
+---
+
+### Langkah 4: Verifikasi Profiling
+
+Setelah seluruh teknik optimasi diimplementasikan, aplikasi diuji kembali pada perangkat fisik Android yang sama (`arm64 (64 bit) android` — Xiaomi `2201117TY`) dengan skenario interaksi yang identik.
+
+#### Tangkapan Layar Profiling Sebelum vs Sesudah Optimasi:
+
+| Sebelum Optimasi (Baseline) | Sesudah Optimasi (Verified After) |
+|:---:|:---:|
+| ![Sebelum Optimasi](screenshots/before-profile.png) | ![Sesudah Optimasi](screenshots/after-profile.png) |
+
+#### Tabel Perbandingan Metrik Performa (Before vs After):
+
+| Metrik / Parameter | Sebelum Optimasi (Baseline) | Sesudah Optimasi (After) | Analisis Dampak |
+|---|---|---|---|
+| **Rata-rata Frame Rate** | < 45 FPS (fluktuatif) | **Stabil 60 FPS (average)** | Peningkatan kehalusan visual sempurna |
+| **Durasi Frame Time saat Scroll** | Melonjak hingga 27–32 ms (*Jank*) | **Rata-rata 2 ms – 5 ms** | Seluruh frame berada jauh di bawah ambang 16,67 ms |
+| **Jank / Frame Drops** | Terjadi red-bar spike > 27 ms | **0 Jank Frames (Nol Frame Drop Merah)** | 100% bebas lag & tanpa stuttering |
+| **Beban UI Thread (Dart)** | Tinggi akibat rebuild berulang | **Sangat rendah (1–3 ms)** | Hanya subtree terkait yang di-rebuild |
+| **Beban Raster Thread (GPU)** | Tinggi (repainting seluruh canvas) | **Rendah (1–4 ms)** | `RepaintBoundary` mengisolasi render layer |
+| **Konsumsi Memori Gambar** | Full decoding resolution | Terkompresi (`cacheWidth: 300`) | Mencegah lonjakan heap memory dari gambar besar |
+| **Responsivitas Data** | Delay I/O jaringan berulang | Instan via *Stale-While-Revalidate* cache | Data lokal langsung tampil tanpa jeda |
+
+
 
