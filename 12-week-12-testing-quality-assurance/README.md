@@ -327,4 +327,81 @@ void main() {
 }
 ```
 
+---
+
+## 5. Pengujian Widget (Widget Testing)
+
+### A. Konsep Pengujian Antarmuka Pengguna
+Pengujian widget memverifikasi tampilan visual dan interaksi pengguna pada satu atau beberapa widget tanpa perlu menjalankan aplikasi pada emulator atau perangkat fisik Android yang lambat. Pengujian ini berjalan pada lingkungan *headless* yang sangat cepat menggunakan `WidgetTester`.
+
+Metode utama yang digunakan:
+1. **`tester.pumpWidget()`**: Merender pohon widget ke lingkungan pengujian.
+2. **`find`**: Menemukan elemen berdasarkan teks (`find.text`), tipe (`find.byType`), atau kunci identitas (`find.byKey`).
+3. **`tester.enterText()`**: Memasukkan nilai teks ke dalam field input (`TextFormField`).
+4. **`tester.tap()`**: Meniru ketukan jari pengguna pada tombol (`ElevatedButton`).
+5. **`tester.pumpAndSettle()`**: Memompa frame berulang hingga seluruh animasi, transisi, dan microtask selesai secara deterministik (menghindari penggunaan `Future.delayed` statis).
+
+### B. Desain Widget Ramah Pengujian (*Test-Friendly Design*)
+Halaman tugas diimplementasikan pada [`lib/features/tasks/presentation/pages/task_page.dart`](campus_notify/lib/features/tasks/presentation/pages/task_page.dart) dengan menyertakan atribut `Key` eksplisit:
+* `Key('task-title-field')`: Input field judul tugas.
+* `Key('save-task-button')`: Tombol simpan tugas.
+* `Key('task-list-view')`: Kontainer ListView daftar tugas.
+
+### C. Skenario Pengujian Widget
+Berkas pengujian diimplementasikan pada [`test/task_page_widget_test.dart`](campus_notify/test/task_page_widget_test.dart) mencakup 5 skenario penting:
+1. **Tampilan Awal (*Initial State*)**: Memverifikasi judul halaman `'Daftar Tugas Kampus'`, keberadaan input field dan tombol simpan, serta teks kondisi kosong (`'Belum ada tugas'`).
+2. **Validasi Masukan Kosong (*Validation Error*)**: Menekan tombol simpan dengan field kosong memicu pesan validasi `'Judul tugas tidak boleh kosong atau hanya spasi'`.
+3. **Validasi Batas Karakter**: Mengetik kurang dari 3 karakter (`'AB'`) memicu pesan error `'Judul tugas minimal harus terdiri dari 3 karakter'`.
+4. **Interaksi Pengguna Sukses (*Happy Path Interaction*)**: Memasukkan teks `'Baca materi testing Flutter'`, menekan tombol simpan, memompa frame (`pumpAndSettle`), lalu memverifikasi bahwa item muncul di layar dan *empty state* menghilang.
+5. **Daftar dengan Data Awal**: Memastikan parameter `initialTasks` dirender dengan benar.
+
+```dart
+void main() {
+  group('TaskPage Widget Tests', () {
+    testWidgets('menampilkan judul halaman dan tampilan awal kosong (empty state)', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: TaskPage()),
+      );
+
+      expect(find.text('Daftar Tugas Kampus'), findsOneWidget);
+      expect(find.text('Belum ada tugas'), findsOneWidget);
+      expect(find.byKey(const Key('task-title-field')), findsOneWidget);
+      expect(find.byKey(const Key('save-task-button')), findsOneWidget);
+    });
+
+    testWidgets('menampilkan pesan validasi saat tombol simpan ditekan dengan input kosong', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: TaskPage()),
+      );
+
+      await tester.tap(find.byKey(const Key('save-task-button')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Judul tugas tidak boleh kosong atau hanya spasi'),
+        findsOneWidget,
+      );
+      expect(find.text('Belum ada tugas'), findsOneWidget);
+    });
+
+    testWidgets('pengguna dapat memasukkan judul tugas dan melihatnya muncul di daftar', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: TaskPage()),
+      );
+
+      await tester.enterText(
+        find.byKey(const Key('task-title-field')),
+        'Baca materi testing Flutter',
+      );
+      await tester.tap(find.byKey(const Key('save-task-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Baca materi testing Flutter'), findsOneWidget);
+      expect(find.text('Belum ada tugas'), findsNothing);
+    });
+  });
+}
+```
+
+
 
