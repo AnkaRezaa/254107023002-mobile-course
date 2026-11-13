@@ -203,3 +203,128 @@ void main() {
 }
 ```
 
+---
+
+## 4. Menguji Kode Asinkron dan Dependensi
+
+### A. Mengapa Menghindari API / Jaringan Sungguhan dalam Pengujian?
+Mengandalkan endpoint server nyata atau koneksi internet pada pengujian unit memiliki kelemahan fatal:
+1. **Fluktuasi Jaringan (*Flaky Tests*)**: Pengujian bisa mendadak gagal karena timeout atau koneksi lambat, bukan karena bug pada kode aplikasi.
+2. **Ketergantungan Data Eksternal**: Data pada server dapat berubah sewaktu-waktu oleh pengguna lain.
+3. **Eksekusi Lambat**: Melakukan handshake TCP dan latency HTTP membuat test suite memakan waktu lama.
+4. **Biaya & Batasan Kuota**: Permintaan berulang dapat menghabiskan kuota rate limit API.
+
+### B. Kontrak Sumber Data (*Interface*) & Layanan Bisnis
+Sesuai prinsip *Dependency Inversion*, dibuat kontrak abstraksi pada [`lib/features/tasks/domain/repositories/task_repository.dart`](campus_notify/lib/features/tasks/domain/repositories/task_repository.dart):
+```dart
+abstract interface class TaskRepository {
+  Future<List<String>> getTasks();
+  Future<void> addTask(String title);
+}
+```
+
+Layanan bisnis [`lib/features/tasks/domain/services/task_service.dart`](campus_notify/lib/features/tasks/domain/services/task_service.dart) hanya bergantung pada kontrak di atas:
+```dart
+class TaskService {
+  TaskService(this._repository);
+
+  final TaskRepository _repository;
+
+  Future<List<String>> loadTasks() {
+    return _repository.getTasks();
+  }
+
+  Future<void> saveTask(String title) async {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError('Judul tugas tidak boleh kosong.');
+    }
+    await _repository.addTask(trimmed);
+  }
+}
+```
+
+### C. Implementasi Fake Repository
+*Fake* adalah objek pengganti tiruan yang memiliki implementasi kerja yang disederhanakan dan perilakunya dapat dikendalikan penuh oleh berkas pengujian.
+
+File pengujian diimplementasikan pada [`test/task_service_test.dart`](campus_notify/test/task_service_test.dart):
+```dart
+class FakeTaskRepository implements TaskRepository {
+  FakeTaskRepository({List<String>? tasks, this.error})
+      : _tasks = tasks != null ? List.from(tasks) : [];
+
+  final List<String> _tasks;
+  final Exception? error;
+
+  @override
+  Future<List<String>> getTasks() async {
+    if (error != null) throw error!;
+    return List.unmodifiable(_tasks);
+  }
+
+  @override
+  Future<void> addTask(String title) async {
+    if (error != null) throw error!;
+    _tasks.add(title);
+  }
+}
+```
+
+### D. Pengujian Kasus Sukses dan Penanganan Kegagalan (*Error Handling*)
+1. **Pengujian Alur Sukses**:
+   Memastikan `TaskService` dapat meneruskan daftar data secara utuh dari repositori.
+2. **Pengujian Alur Error**:
+   Memastikan bahwa ketika terjadi error (misalnya `ServerException`), exception tersebut dilempar secara transparan dan **tidak disamarkan secara diam-diam menjadi daftar kosong**. Penanganan kegagalan yang tepat adalah kunci ketahanan aplikasi.
+
+```dart
+void main() {
+  group('TaskService dengan FakeTaskRepository', () {
+    test('meneruskan data dari repository saat sukses', () async {
+      final fakeRepo = FakeTaskRepository(
+        tasks: ['Baca materi Flutter Testing', 'Kerjakan Codelab Week 12'],
+      );
+      final service = TaskService(fakeRepo);
+
+      final result = await service.loadTasks();
+
+      expect(result, equals(['Baca materi Flutter Testing', 'Kerjakan Codelab Week 12']));
+    });
+
+    test('melempar exception saat repository gagal (error tidak diam-diam menjadi daftar kosong)', () async {
+      final fakeRepo = FakeTaskRepository(
+        error: const ServerException('500 Internal Server Error'),
+      );
+      final service = TaskService(fakeRepo);
+
+      expect(
+        () => service.loadTasks(),
+        throwsA(isA<ServerException>()),
+      );
+    });
+
+    test('berhasil menyimpan tugas baru dan menambahkannya ke repository', () async {
+      final fakeRepo = FakeTaskRepository(tasks: []);
+      final service = TaskService(fakeRepo);
+
+      await service.saveTask('Persiapan Presentasi Akhir');
+
+      final tasks = await service.loadTasks();
+      expect(tasks, hasLength(1));
+      expect(tasks.first, equals('Persiapan Presentasi Akhir'));
+    });
+
+    test('menolak penyimpanan jika judul tugas hanya berupa spasi kosong', () async {
+      final fakeRepo = FakeTaskRepository();
+      final service = TaskService(fakeRepo);
+
+      expect(
+        () => service.saveTask('   '),
+        throwsA(isA<ArgumentError>()),
+      );
+      expect(await fakeRepo.getTasks(), isEmpty);
+    });
+  });
+}
+```
+
+
