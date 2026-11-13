@@ -7,3 +7,4 @@ abstract interface class TaskRepository {
   /// Menambahkan tugas baru ke dalam repositori.
   Future<void> addTask(String title);
 }
+
