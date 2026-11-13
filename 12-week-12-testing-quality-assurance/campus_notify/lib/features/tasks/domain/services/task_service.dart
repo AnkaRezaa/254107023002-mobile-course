@@ -20,3 +20,4 @@ class TaskService {
     await _repository.addTask(trimmed);
   }
 }
+

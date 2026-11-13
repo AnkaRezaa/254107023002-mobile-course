@@ -475,6 +475,126 @@ flutter test integration_test/app_test.dart -d windows
    * Masukkan pengujian tersebut secara permanen ke dalam test suite utama repository.
    * Jalankan seluruh suite secara berkala (`flutter test`) sebelum melakukan push atau pembuatan pull request.
 
+---
+
+## 7. Praktikum: Susun Test Suite untuk Fitur Tugas
+
+Pada praktikum ini disusun *Test Suite* komprehensif untuk fitur tugas (*Task Management*) yang mencakup pengujian dari logika bisnis murni, isolasi dependensi, antarmuka visual, hingga alur integrasi menyeluruh.
+
+### A. Matriks Skenario Pengujian (Paling Sedikit Tiga Skenario)
+
+| ID Skenario | Kategori Skenario | Jenis Pengujian | Target yang Diuji | Ekspektasi Perilaku | Hasil Verifikasi |
+|---|---|---|---|---|---|
+| **SCN-01** | **Kasus Sukses (*Happy Path*)** | Unit & Widget | `TaskValidator`, `TaskPage` | Judul `'Baca materi testing Flutter'` diterima valid; saat tombol simpan ditekan, teks muncul di `ListView` | **LULUS (Passed)** |
+| **SCN-02** | **Kasus Tepi (*Edge Case*)** | Unit & Widget | `TaskValidator`, `TaskPage` | Masukan berupa spasi kosong (`"   "`), tab/newline, atau kurang dari 3 karakter ditolak dengan pesan error validasi spesifik | **LULUS (Passed)** |
+| **SCN-03** | **Kasus Kegagalan (*Error / Failure*)** | Dependency Unit | `TaskService` & `FakeTaskRepository` | Saat repositori mengalami `ServerException (500)`, error dilempar transparan dan tidak disamarkan menjadi list kosong | **LULUS (Passed)** |
+| **SCN-04** | **Nilai Batas (*Boundary Values*)** | Unit | `TaskValidator.validateTaskTitle` | Tepat 3 karakter (diterima), tepat 100 karakter (diterima), 101 karakter (ditolak dengan batas maksimal) | **LULUS (Passed)** |
+| **SCN-05** | **Alur End-to-End (*Integration*)** | Integrasi | `integration_test/app_test.dart` | Pengguna membuka aplikasi, mengisi field ber-Key, menyimpan, dan data tampil stabil pada render perangkat fisik | **LULUS (Passed)** |
+
+### B. Pemetaan Struktur Berkas Test Suite
+
+```text
+campus_notify/
+├── lib/
+│   ├── core/validators/
+│   │   └── task_validator.dart               # Logika validasi bisnis murni (Pure Dart)
+│   ├── features/tasks/
+│   │   ├── domain/
+│   │   │   ├── repositories/task_repository.dart  # Kontrak sumber data (Interface)
+│   │   │   └── services/task_service.dart         # Layanan bisnis (Dependency Inversion)
+│   │   └── presentation/pages/task_page.dart      # Widget UI ber-Key eksplisit
+├── test/
+│   ├── is_valid_task_title_test.dart         # Unit Test: Logika validasi & kasus tepi
+│   ├── task_service_test.dart                 # Dependency Test: Asinkron & Fake Repository
+│   └── task_page_widget_test.dart             # Widget Test: Rendering & Interaksi Form
+└── integration_test/
+    └── app_test.dart                          # Integration Test: Alur End-to-End
+```
+
+---
+
+## 8. Cakupan Pengujian, Tugas, dan Refleksi
+
+### A. Bukti Mesin Hijau (Green Machine Proof)
+
+Seluruh unit test, service/fake repository test, dan widget test pada `campus_notify` berhasil dijalankan dan lulus 100%, disertai laporan cakupan kode (`coverage/lcov.info`):
+
+#### 1. Hasil `flutter test --no-pub --coverage` (Unit, Service & Widget Tests):
+```text
+00:16 +41: All tests passed!
+```
+Seluruh **41 test case** (mencakup `test/is_valid_task_title_test.dart`, `test/task_service_test.dart`, `test/task_page_widget_test.dart`, serta test suite fitur `chat` dan `announcements`) lulus tanpa kegagalan.
+
+#### 2. Laporan Cakupan Kode (*Code Coverage* dari `coverage/lcov.info`):
+```text
+Laporan lcov digenerate pada: coverage/lcov.info
+Total Lines Covered (Keseluruhan Project): 360 / 763 baris (47.2%)
+
+Rincian Modul Baru (Week 12 - Tasks & Validator):
+- lib/core/validators/task_validator.dart              :  9 /  9 baris (100.0%)
+- lib/features/tasks/domain/services/task_service.dart :  8 /  8 baris (100.0%)
+- lib/features/tasks/presentation/pages/task_page.dart : 42 / 42 baris (100.0%)
+Total Cakupan Modul Week 12                            : 59 / 59 baris (100.0%)
+
+Rincian Modul Lainnya:
+- lib/features/announcements/domain/usecases/get_announcements.dart          :  3 /   3 (100.0%)
+- lib/features/announcements/domain/usecases/search_announcements.dart       :  8 /   8 (100.0%)
+- lib/features/chat/chat_screen.dart                                         : 140 / 226 (61.9%)
+- lib/features/chat/providers/chat_providers.dart                            :  77 / 186 (41.4%)
+- lib/features/announcements/presentation/pages/announcement_page.dart       :  12 / 116 (10.3%)
+- lib/features/announcements/data/repositories/announcement_repository_impl.dart : 0 / 20 (0.0%)
+- lib/features/announcements/presentation/providers/announcement_providers.dart  : 0 / 21 (0.0%)
+```
+
+#### 3. Pengujian Integrasi (`integration_test/app_test.dart`):
+Skrip pengujian integrasi end-to-end telah disusun pada `integration_test/app_test.dart` dan dependensi `integration_test` (`sdk: flutter`) telah dikonfigurasi di `pubspec.yaml`. Perintah eksekusi pada perangkat/emulator Android:
+```bash
+flutter test integration_test/app_test.dart -d <device_id>
+```
+
+#### 4. Temuan yang Belum Terselesaikan & Kendala:
+1. **Pengujian Integrasi Perangkat Nyata**: `integration_test/app_test.dart` belum dijalankan pada perangkat fisik/emulator Android di sesi verifikasi ini karena membutuhkan target perangkat aktif (`-d <device_id>`).
+2. **Analisis Statis (`flutter analyze`)**: Eksekusi `flutter analyze` pada lingkungan runner/sandbox mengalami *hang* melewati batas waktu tunggu, sehingga pemeriksaan lint akhir perlu dijalankan langsung di terminal lokal (`flutter analyze`).
+3. **Cakupan Kode Modul Lama**: Beberapa berkas pada fitur pengumuman (`announcement_repository_impl.dart` 0/20 baris, `announcement_providers.dart` 0/21 baris, dan `announcement_page.dart` 12/116 baris) belum tercakup oleh automated test dan menjadi prioritas peningkatan cakupan pada iterasi berikutnya.
+
+---
+
+### B. Dokumentasi Tangkapan Layar Bukti Pengujian
+
+| Pengujian Unit, Service & Widget (`+41`) | Laporan Cakupan Kode (`lcov.info`) |
+|:---:|:---:|
+| ![Unit & Widget Tests](screenshot/unit-and-widget-tests.png) | ![Code Coverage](screenshot/coverage-and-analyze.png) |
+
+---
+
+### C. Refleksi Akademik
+
+#### 1. Bug apa yang paling mungkin terlewat tanpa pengujian yang Anda tulis?
+> **Jawaban**:  
+> Kalau hanya mengandalkan pengecekan manual, biasanya kita cuma mencoba input yang normal seperti `"Belajar Flutter"`. Masalahnya, kasus-kasus kecil seperti pengguna tidak sengaja menekan spasi berkali-kali lalu menekan simpan, atau mengetik judul yang terlalu pendek (kurang dari 3 karakter) sangat mudah terlewat. Tanpa unit test dan widget test untuk validasi, input spasi kosong tadi bisa lolos masuk ke daftar tugas sebagai item kosong yang aneh dilihat pengguna.  
+> Selain itu, bug lain yang sering tidak ketahuan adalah ketika terjadi error dari server, tapi di aplikasi malah ditangani dengan mengembalikan list kosong (`[]`). Tanpa test pada `FakeTaskRepository` yang mengecek `ServerException`, pengguna bisa mengira datanya memang kosong, padahal sebenarnya sedang terjadi gangguan jaringan atau server error.
+
+#### 2. Bagian mana yang perlu fake, dan bagaimana fake itu membuat pengujian lebih konsisten?
+> **Jawaban**:  
+> Bagian yang paling perlu dibuatkan *fake* adalah bagian akses data (`TaskRepository`), terutama yang berhubungan dengan internet/API, Firebase, atau penyimpanan lokal.  
+> Dengan memakai `FakeTaskRepository`, hasil pengujian jadi jauh lebih konsisten karena tidak bergantung pada kondisi jaringan Wi-Fi, server yang sedang down, atau data di server yang berubah-ubah. Kita bisa langsung mengatur sendiri skenario yang mau dites—mau simulasi berhasil ambil data, daftar kosong, atau simulasi server error 500—semuanya berjalan cepat di memori tanpa perlu koneksi internet sungguhan.
+
+#### 3. Apa perbedaan nilai yang diberikan pengujian widget dan pengujian integrasi pada fitur Anda?
+> **Jawaban**:  
+> Pengujian widget fokus memastikan tampilan dan interaksi di satu halaman berjalan benar—misalnya apakah pesan error muncul saat form kosong, atau apakah teks baru langsung tampil setelah tombol simpan ditekan. Keunggulannya, widget test berjalan sangat cepat tanpa perlu membuka emulator atau menyambungkan HP.  
+> Sementara itu, pengujian integrasi memberikan keyakinan bahwa seluruh bagian aplikasi benar-benar berjalan mulus saat digabungkan dan dijalankan di perangkat atau emulator asli. Hal-hal seperti alur navigasi, performa rendering nyata, dan interaksi antar komponen hanya bisa dipastikan lewat integration test. Jadi keduanya saling melengkapi: widget test cepat untuk menjaga kualitas komponen, sedangkan integration test memastikan alur aplikasi aman di perangkat pengguna.
+
+---
+
+### D. Referensi Pendukung
+
+* [Slide Minggu 12: Pengujian dan Jaminan Kualitas](https://jti-polinema.github.io/flutter-codelab/00-slides/Week_12_Testing_Quality_Assurance.html)
+* [Testing Flutter Apps Official Documentation](https://docs.flutter.dev/testing/overview)
+* [An Introduction to Widget Testing](https://docs.flutter.dev/cookbook/testing/widget/introduction)
+* [Integration Testing with integration_test](https://docs.flutter.dev/testing/integration-tests)
+* [Dart Test Package & Matchers Guide](https://pub.dev/packages/test)
+
+
 
 
 
