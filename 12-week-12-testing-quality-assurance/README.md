@@ -403,5 +403,78 @@ void main() {
 }
 ```
 
+---
+
+## 6. Pengujian Integrasi dan Regresi
+
+### A. Pengujian Alur Menyeluruh pada Perangkat (*End-to-End Testing*)
+Pengujian integrasi memeriksa apakah beberapa komponen aplikasi (UI Form, validasi logika, state lokal, rendering ListView, dan controller) bekerja bersama secara harmonis pada lingkungan perangkat nyata (*physical device*) atau emulator.
+
+Paket resmi `integration_test` diaktifkan pada `dev_dependencies` di [`pubspec.yaml`](campus_notify/pubspec.yaml):
+```yaml
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+```
+
+### B. Implementasi Pengujian Integrasi
+Pengujian diletakkan pada berkas [`integration_test/app_test.dart`](campus_notify/integration_test/app_test.dart) menggunakan binding `IntegrationTestWidgetsFlutterBinding.ensureInitialized()`:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'package:campus_notify/features/tasks/presentation/pages/task_page.dart';
+
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  group('End-to-End Integration Tests - Fitur Tugas Kampus', () {
+    testWidgets('alur lengkap: pengguna memasukkan tugas baru dan memverifikasi keberadaannya di daftar', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: TaskPage()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Daftar Tugas Kampus'), findsOneWidget);
+      expect(find.text('Belum ada tugas'), findsOneWidget);
+
+      final titleField = find.byKey(const Key('task-title-field'));
+      final saveButton = find.byKey(const Key('save-task-button'));
+
+      await tester.enterText(titleField, 'Menyelesaikan Laporan Praktikum Week 12');
+      await tester.pumpAndSettle();
+
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Menyelesaikan Laporan Praktikum Week 12'), findsOneWidget);
+      expect(find.text('Belum ada tugas'), findsNothing);
+    });
+  });
+}
+```
+
+### C. Perintah Eksekusi Pengujian Integrasi
+Untuk menjalankan pengujian integrasi pada emulator atau perangkat fisik (misalnya Xiaomi `2201117TY` atau desktop Windows), gunakan perintah:
+```powershell
+# Menjalankan pengujian integrasi pada perangkat Android fisik / emulator
+flutter test integration_test/app_test.dart -d 2201117TY
+
+# Atau menjalankan pada desktop runner aktif
+flutter test integration_test/app_test.dart -d windows
+```
+
+### D. Pencegahan Regresi (*Regression Testing Strategy*)
+1. **Definisi Regresi**: Terjadi ketika penambahan fitur baru atau perbaikan bug di satu modul merusak fitur yang sebelumnya telah berjalan dengan baik.
+2. **Siklus Pencegahan Bug**:
+   * Saat bug ditemukan, tulis pengujian otomatis yang mereproduksi bug tersebut (test berada dalam status **gagal / merah**).
+   * Perbaiki kode sumber aplikasi sampai pengujian tersebut **berhasil / hijau**.
+   * Masukkan pengujian tersebut secara permanen ke dalam test suite utama repository.
+   * Jalankan seluruh suite secara berkala (`flutter test`) sebelum melakukan push atau pembuatan pull request.
+
+
 
 

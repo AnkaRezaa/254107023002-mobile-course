@@ -11,6 +11,7 @@ import 'features/auth/presentation/pages/login_page.dart';
 import 'pages/home_page.dart';
 import 'features/announcements/presentation/pages/announcement_page.dart';
 import 'features/chat/chat_screen.dart';
+import 'features/tasks/presentation/pages/task_page.dart';
 import 'routes.dart';
 
 void main() async {
@@ -53,6 +54,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.chat,
         builder: (_, s) => const ChatScreen(),
+      ),
+      GoRoute(
+        path: '/tasks',
+        builder: (_, _) => const TaskPage(),
       ),
     ],
   );
