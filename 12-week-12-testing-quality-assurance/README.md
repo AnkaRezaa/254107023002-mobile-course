@@ -556,7 +556,6 @@ flutter test integration_test/app_test.dart -d <device_id>
 1. **Pengujian Integrasi Perangkat Nyata**: `integration_test/app_test.dart` belum dijalankan pada perangkat fisik/emulator Android di sesi verifikasi ini karena membutuhkan target perangkat aktif (`-d <device_id>`).
 2. **Analisis Statis (`flutter analyze`)**: Eksekusi `flutter analyze` pada lingkungan runner/sandbox mengalami *hang* melewati batas waktu tunggu, sehingga pemeriksaan lint akhir perlu dijalankan langsung di terminal lokal (`flutter analyze`).
 3. **Cakupan Kode Modul Lama**: Beberapa berkas pada fitur pengumuman (`announcement_repository_impl.dart` 0/20 baris, `announcement_providers.dart` 0/21 baris, dan `announcement_page.dart` 12/116 baris) belum tercakup oleh automated test dan menjadi prioritas peningkatan cakupan pada iterasi berikutnya.
-
 ---
 
 ### B. Dokumentasi Tangkapan Layar Bukti Pengujian
