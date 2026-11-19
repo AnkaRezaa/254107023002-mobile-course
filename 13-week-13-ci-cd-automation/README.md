@@ -178,6 +178,8 @@ Setiap commit rilis yang berhasil lolos pipeline CI ditandai dengan Git Tag:
 git tag -a v1.3.0 -m "Release v1.3.0: CI/CD Pipeline Automation & Multi-Artifact Build"
 git push origin v1.3.0
 ```
+Tag rilis `v1.3.0` telah berhasil dibuat dan terunggah pada remote GitHub:
+![GitHub Release Tag](screenshot/github-release-tag.png)
 
 ### C. Analisis Risiko Keamanan & Manajemen Rahasia (*Secrets Management*)
 
@@ -191,18 +193,19 @@ git push origin v1.3.0
 
 ---
 
-## 6. Verifikasi Lokal Sebelum Eksekusi CI
+## 6. Bukti Eksekusi & Evaluasi Pipeline
 
+### A. Verifikasi Lokal Sebelum Eksekusi CI
 Sebelum kode di-push ke repository, seluruh tahapan pemeriksaan telah divalidasi secara lokal pada direktori `13-week-13-ci-cd-automation/campus_notify`:
 
-### 1. Verifikasi Format Kode (`dart format`)
+#### 1. Verifikasi Format Kode (`dart format`)
 ```text
 $ dart format --output=none --set-exit-if-changed .
 Formatted 48 files (0 changed) in 0.36 seconds.
 Exit code: 0 (Semua file telah terformat rapi sesuai standar resmi Dart)
 ```
 
-### 2. Verifikasi Test Suite & Cakupan Kode (`flutter test --coverage`)
+#### 2. Verifikasi Test Suite & Cakupan Kode (`flutter test --coverage`)
 ```text
 $ flutter test --no-pub --coverage
 00:04 +41: All tests passed!
@@ -210,7 +213,28 @@ Generated: coverage/lcov.info
 ```
 Seluruh **41 skenario pengujian** (unit test validasi tugas, edge cases, fake repository, isolasi dependensi, widget test task form & announcement, serta chat screen) lulus 100%.
 
-### 3. Dokumentasi Tangkapan Layar Bukti Pengujian & Konfigurasi
+### B. Bukti Eksekusi Sukses di GitHub Actions Runner
+Alur kerja otomatis **`Flutter CI`** telah sukses dieksekusi di runner GitHub Actions (`ubuntu-latest`) dalam waktu 6 menit 9 detik dengan status **100% Lulus (Semua Step Centang Hijau)**:
+
+* **Trigger**: Push ke branch `main`.
+* **Workflow Run**: `#4` (`fix(android): upgrade AGP to 9.1.1 and add skip-dependency-validation...`).
+* **Durasi Total**: 6 menit 9 detik.
+* **Hasil Step**:
+  1. `Checkout Repository` (1s) — Lolos
+  2. `Set up Flutter` (1m 3s) — Lolos (channel stable 3.50.0-x64)
+  3. `Install Dependencies` (4s) — Lolos (`flutter pub get`)
+  4. `Check Formatting` (4s) — Lolos (`dart format`)
+  5. `Analyze Static Code` (7s) — Lolos (`flutter analyze --fatal-infos`)
+  6. `Run Tests with Coverage` (13s) — Lolos (`flutter test --coverage`)
+  7. `Build Android APK (Release)` (3m 57s) — Lolos (`build/app/outputs/flutter-apk/app-release.apk`)
+  8. `Build Android App Bundle (Release)` (12s) — Lolos (`build/app/outputs/bundle/release/app-release.aab`)
+  9. `Upload Android Build Artifacts` (2s) — Lolos (`android-builds` tersimpan dengan retensi 7 hari)
+
+### C. Dokumentasi Tangkapan Layar Bukti Pengujian & Pipeline
+
+| Bukti Pipeline GitHub Actions Berhasil (`Success`) | Bukti Tag Rilis `v1.3.0` di GitHub |
+|:---:|:---:|
+| ![GitHub Actions Success](screenshot/github-actions-success.png) | ![GitHub Release Tag](screenshot/github-release-tag.png) |
 
 | Verifikasi Format & Test Suite Lokal | Arsitektur Pipeline CI/CD (`flutter-ci.yml`) |
 |:---:|:---:|
