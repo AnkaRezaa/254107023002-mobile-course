@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "102070734021",
+    "firebase_url": "https://mobile-apps-43c15-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "mobile-apps-43c15",
+    "storage_bucket": "mobile-apps-43c15.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102070734021:android:9b8d87b231a8a24c8a74ac",
+        "android_client_info": {
+          "package_name": "com.example.campus_notify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvzHfwO4KyBoqWNbg6ki--CEk094J1U9I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
