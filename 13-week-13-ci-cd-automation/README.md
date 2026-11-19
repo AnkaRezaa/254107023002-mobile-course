@@ -309,6 +309,27 @@ Alur kerja otomatis **`Flutter CI`** telah sukses dieksekusi di runner GitHub Ac
 > 3. **Persetujuan Rilis & Manajemen Kredensial Produksi (*Release Approval Gate*)**: Keputusan meluncurkan aplikasi ke Google Play Store (termasuk persentase *staged rollout* 10%, 50%, 100%) dan pengesahan *release notes* memerlukan persetujuan Product Owner/Lead Developer guna memitigasi dampak jika terjadi insiden darurat.
 > 4. **Kepatuhan Privasi & Regulasi (*App Store Policy Compliance*)**: Memastikan dokumen kebijakan privasi (*Privacy Policy*), izin akses runtime (kamera/audio), dan deklarasi konten anak/keamanan data Google Play telah sesuai dengan regulasi terbaru.
 
+### 4. Pemeriksaan mana yang paling cepat menemukan masalah?
+> **Jawaban**:  
+> Pemeriksaan yang paling cepat mendeteksi masalah adalah **`dart format`** (hanya memerlukan waktu ~0.3 detik di lokal atau 4 detik di runner) dan **`flutter analyze`** (~7 detik di runner).  
+> Keduanya merupakan jenis analisis statis (*static checks*) yang bekerja langsung pada struktur sintaksis dan teks kode tanpa perlu menginisialisasi simulator, merender widget, atau mengompilasi binary native Android. Pemeriksaan ini menerapkan prinsip *fail-fast*: jika ada ketidaksesuaian format, typo sintaks, atau variabel tak terpakai, pipeline langsung digagalkan sedini mungkin sebelum menghabiskan waktu dan kuota komputasi runner untuk pengujian otomatis (13 detik) apalagi kompilasi Gradle build yang memakan waktu hampir 4 menit.
+
+### 5. Siapa yang dapat mengakses artefak dan secrets workflow?
+> **Jawaban**:  
+> * **Akses Artefak (`android-builds` / APK & AAB)**:  
+>   Artefak disimpan di infrastruktur GitHub Actions selama masa retensi (7 hari). Siapa saja yang memiliki izin baca (*Read/View permission*) ke repositori dapat mengunduh zip artefak tersebut dari halaman ringkasan alur kerja. Pada repositori publik, publik umum dapat mengunduhnya; sedangkan pada repositori privat, hanya anggota tim/kolaborator repositori yang dapat mengaksesnya.  
+> * **Akses Secrets Workflow (GitHub Actions Secrets)**:  
+>   Hanya pemilik repositori (*Repository Owner*) dan pengguna dengan peran *Admin* yang dapat membuat, mengubah, atau menghapus secret. Nilai rahasia dienkripsi secara ketat dan **bahkan admin sekalipun tidak dapat membaca kembali isinya** setelah disimpan. Runner alur kerja hanya dapat mengakses nilai tersebut secara sementara di memori proses melalui variabel `${{ secrets.NAMA_SECRET }}`. Selain itu, alur kerja yang dipicu oleh *pull request* dari branch fork pihak ketiga secara otomatis **diblokir dan tidak diberikan akses ke secrets repositori** demi mencegah pencurian kredensial (*secret leakage*).
+
+### 6. Apakah build Anda siap rilis, atau baru berhasil dikompilasi?
+> **Jawaban**:  
+> Build yang dihasilkan saat ini **baru sebatas berhasil dikompilasi (*compiled release build*), dan BELUM siap dirilis ke pengguna umum (*not production-ready*)**.  
+> Alasannya:
+> 1. **Kredensial Penandatanganan (Signing Key)**: Paket APK dan AAB saat ini masih ditandatangani menggunakan *debug key* bawaan (`signingConfig = signingConfigs.getByName("debug")`), bukan menggunakan *Production Keystore* resmi milik pengembang/organisasi. Google Play Store akan menolak berkas AAB yang ditandatangani dengan kunci debug.
+> 2. **Proteksi Kode Sumber (Obfuscation & Shrinking)**: Perintah kompilasi belum mengaktifkan flag proteksi kode (`--obfuscate --split-debug-info`), sehingga logika bisnis di dalam aplikasi masih rentan terhadap teknik *reverse engineering*.
+> 3. **Pengujian pada Perangkat Fisik Nyata**: Binary baru diuji di lingkungan runner virtual Linux (headless), belum diuji langsung (*smoke testing* / *field testing*) pada perangkat fisik Android beragam untuk memverifikasi fitur kamera OCR, mikrofon STT, dan notifikasi FCM.
+> 4. **Kelengkapan Dokumen & Kebijakan Google Play**: Belum ada konfigurasi *release track* (Internal/Alpha/Beta), persetujuan *release notes*, dan kepatuhan terhadap kebijakan privasi Google Play Console.
+
 ---
 
 ## 8. Referensi Pendukung
