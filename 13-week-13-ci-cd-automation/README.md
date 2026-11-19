@@ -191,6 +191,47 @@ Tag rilis `v1.3.0` telah berhasil dibuat dan terunggah pada remote GitHub:
    - Pada alur produksi sesungguhnya, file keystore di-encode dalam bentuk Base64 dan disimpan di **GitHub Actions Secrets**. Pada workflow rilis khusus (yang hanya aktif saat tag rilis dibuat), keystore didekode ke disk runner secara temporer dan langsung dihapus setelah build selesai.
    - Keystore produksi **tidak boleh digunakan pada workflow pull request** guna menghindari kebocoran kredensial dari fork kontributor yang tidak terpercaya.
 
+### D. Dokumentasi Tugas Codelab: Versi Berikutnya, Pemeriksaan yang Dijalankan, & Risiko Keamanan
+
+Secara eksplisit, tabel berikut merangkum 3 poin penugasan utama sesuai panduan codelab Minggu 13:
+
+#### 1. Rencana Versi Berikutnya (*Next Versioning Roadmap*)
+* **Versi Saat Ini**: `1.3.0+13` (Rilis Week 13 — Otomasi CI/CD & Build APK/AAB).
+* **Rencana Rilis Mendatang**:
+  * **`v1.3.1+14` (Patch Version)**: Digunakan jika terdapat perbaikan *bug* kecil, update patch dependensi keamanan, atau penyesuaian styling tanpa merubah fungsionalitas utama.
+  * **`v1.4.0+14` (Minor Version — Target Minggu 14)**: Penambahan modul baru *Deployment & Monitoring* (integrasi Sentry / Firebase Crashlytics & Performance Monitoring serta otomatisasi publikasi ke Google Play Internal Testing Track).
+  * **`v2.0.0+15` (Major Version)**: Digunakan jika terjadi perubahan arsitektur besar yang tidak *backward-compatible*, perombakan total kontrak API backend, atau desain ulang antarmuka pengguna (UI/UX overhaul).
+* **Aturan Build Number**: Nilai `+14`, `+15`, dst. akan selalu dinaikkan satu tingkat secara berurutan pada setiap pemicuan build rilis agar memenuhi validasi `versionCode` Google Play.
+
+#### 2. Pemeriksaan yang Dijalankan pada Pipeline (*Checks Executed*)
+Pipeline GitHub Actions mengeksekusi 4 gerbang pemeriksaan kualitas (*Quality Gates*) secara berurutan:
+1. **Pemeriksaan Format Kode (`dart format --output=none --set-exit-if-changed .`)**:
+   - Memeriksa kerapian sintaksis dan indentasi seluruh berkas Dart.
+   - Otomatis menggagalkan pipeline jika ada file yang tidak memenuhi kaidah penulisan standar resmi Dart.
+2. **Analisis Statis Ketat (`flutter analyze --fatal-infos`)**:
+   - Menelusuri seluruh basis kode untuk mendeteksi *dead code*, *unused variables*, kesalahan tipe data, dan potensi masalah logika.
+   - Opsi `--fatal-infos` memastikan tidak ada peringatan info yang diabaikan.
+3. **Pengujian Otomatis & Cakupan Kode (`flutter test --coverage`)**:
+   - Menjalankan 41 test case (unit test logika, boundary/edge cases, fake repository, dan widget UI interaction test).
+   - Menghasilkan berkas `coverage/lcov.info` untuk mengaudit persentase baris kode yang teruji.
+4. **Validasi Kompilasi Android (`flutter build apk` & `flutter build appbundle`)**:
+   - Memastikan tidak ada dependensi Gradle, file manifest, atau pustaka native Android yang konflik saat dibangun dalam mode *release*.
+
+#### 3. Risiko Keamanan yang Masih Perlu Ditangani (*Remaining Security Risks & Mitigations*)
+Meskipun alur otomatisasi dasar telah berjalan, terdapat beberapa risiko keamanan nyata yang masih harus ditangani pada fase rilis produksi:
+1. **Ekstraksi Konfigurasi Klien (`--dart-define`)**:
+   - *Risiko*: Nilai yang diteruskan melalui `--dart-define` terkompilasi langsung ke dalam binary aplikasi klien dan dapat diekstrak oleh pihak ketiga menggunakan teknik *reverse engineering* (`jadx` / `apktool`).
+   - *Mitigasi*: Parameter ini hanya boleh memuat URL publik (staging/prod), dan **dilarang keras** memuat API secret, master key, atau private token. Otentikasi aplikasi wajib menggunakan token jangka pendek (JWT/OAuth) via backend.
+2. **Keystore Signing Produksi (Debug Keystore vs Production Keystore)**:
+   - *Risiko*: Saat ini alur build masih menggunakan signing debug bawaan. Menaruh keystore rilis asli di repo publik dapat menyebabkan pembajakan identitas aplikasi.
+   - *Mitigasi*: File keystore produksi harus di-encode Base64 dan disimpan di **GitHub Actions Secrets**, lalu didekode hanya pada runner workflow rilis yang terlindungi (*protected environments*).
+3. **Celah Keamanan Dependensi Pihak Ketiga (*Supply Chain Vulnerability*)**:
+   - *Risiko*: Pustaka pihak ketiga di `pubspec.yaml` dapat memiliki celah keamanan (*vulnerabilities*) yang belum terdeteksi.
+   - *Mitigasi*: Perlu ditambahkan audit berkala menggunakan `dart pub audit` serta pengaktifan *GitHub Dependabot Security Alerts*.
+4. **Obfuscation dan Kode Sumber Native (R8 / ProGuard)**:
+   - *Risiko*: Binary rilis saat ini belum di-obfuscate secara maksimal sehingga alur kode Dart dan Kotlin masih relatif mudah dibaca ulang.
+   - *Mitigasi*: Mengaktifkan flag `--obfuscate --split-debug-info=/<dir>` pada perintah build produksi guna melindungi logika intelektual aplikasi.
+
 ---
 
 ## 6. Bukti Eksekusi & Evaluasi Pipeline
