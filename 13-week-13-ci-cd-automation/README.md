@@ -172,14 +172,17 @@ version: 1.3.0+13
 * **`0` (PATCH)**: Perbaikan *bug* atau optimasi kecil tanpa perubahan fungsionalitas besar.
 * **`+13` (BUILD NUMBER)**: Nilai bilangan bulat inkremental yang digunakan Android sebagai `versionCode` untuk membedakan urutan rilis di Google Play Store.
 
-### B. Git Tagging untuk Rilis
+### B. Git Tagging & Publikasi Rilis Resmi di GitHub
 Setiap commit rilis yang berhasil lolos pipeline CI ditandai dengan Git Tag:
 ```bash
 git tag -a v1.3.0 -m "Release v1.3.0: CI/CD Pipeline Automation & Multi-Artifact Build"
 git push origin v1.3.0
 ```
-Tag rilis `v1.3.0` telah berhasil dibuat dan terunggah pada remote GitHub:
-![GitHub Release Tag](screenshot/github-release-tag.png)
+Tag rilis `v1.3.0` telah berhasil dibuat dan dipublikasikan secara resmi ke dalam **GitHub Releases** lengkap dengan catatan rilis (*release notes*):
+
+| Pembuatan Form Rilis Baru (`New Release`) | Halaman Publikasi Rilis Resmi (`v1.3.0 Latest`) |
+|:---:|:---:|
+| ![Form Rilis Baru](screenshot/github-new-release.png) | ![Publikasi Rilis Resmi](screenshot/github-published-release.png) |
 
 ### C. Analisis Risiko Keamanan & Manajemen Rahasia (*Secrets Management*)
 
@@ -190,6 +193,12 @@ Tag rilis `v1.3.0` telah berhasil dibuat dan terunggah pada remote GitHub:
    - File *keystore* (`.jks` / `.keystore`) dan kata sandinya tidak boleh dimasukkan ke dalam repositori Git publik.
    - Pada alur produksi sesungguhnya, file keystore di-encode dalam bentuk Base64 dan disimpan di **GitHub Actions Secrets**. Pada workflow rilis khusus (yang hanya aktif saat tag rilis dibuat), keystore didekode ke disk runner secara temporer dan langsung dihapus setelah build selesai.
    - Keystore produksi **tidak boleh digunakan pada workflow pull request** guna menghindari kebocoran kredensial dari fork kontributor yang tidak terpercaya.
+3. **Studi Kasus Deteksi GitHub Secret Scanning (Google API Key pada `google-services.json`)**:
+   - *Deteksi Nyata*: Fitur otomatisasi keamanan **GitHub Secret Scanning** mendeteksi peringatan `Google API Key (Public leak)` pada file konfigurasi `google-services.json` (baris 19) yang berasal dari modul autentikasi Week 6.
+   - *Analisis Risiko*: Pada aplikasi Flutter yang mengintegrasikan Firebase, file `google-services.json` dan API key di dalamnya pada dasarnya berfungsi sebagai pengidentifikasi proyek klien (*Client Project Identifier*), bukan kunci rahasia administratif backend (*Admin Master Secret*). Akses data pada Firebase sesungguhnya dilindungi oleh *Firebase Security Rules* (Firestore & Storage), pembatasan SHA-1 fingerprint sertifikat signing Android di Google Cloud Console, serta *Firebase App Check*.
+   - *Mitigasi Praktik Terbaik*:
+     * Untuk kredensial privat murni (seperti Firebase Service Account JSON, API token berbayar, atau master key), wajib disimpan di **GitHub Actions Secrets** dan tidak boleh di-commit ke Git.
+     * Menerapkan pembatasan (*Application Restrictions*) di Google Cloud Console agar API Key Firebase tersebut hanya dapat dieksekusi oleh aplikasi dengan package name `com.example.campus_notify` dan sidik jari SHA-1 resmi.
 
 ### D. Dokumentasi Tugas Codelab: Versi Berikutnya, Pemeriksaan yang Dijalankan, & Risiko Keamanan
 
@@ -277,9 +286,17 @@ Alur kerja otomatis **`Flutter CI`** telah sukses dieksekusi di runner GitHub Ac
 |:---:|:---:|
 | ![GitHub Actions Success](screenshot/github-actions-success.png) | ![GitHub Release Tag](screenshot/github-release-tag.png) |
 
-| Verifikasi Format & Test Suite Lokal | Arsitektur Pipeline CI/CD (`flutter-ci.yml`) |
+| Formulir Pembuatan Rilis Baru (`New Release`) | Halaman Publikasi Rilis Resmi (`v1.3.0 Latest`) |
 |:---:|:---:|
-| ![Local Verification Tests](screenshot/local-verification-tests.png) | ![CI/CD Workflow YAML](screenshot/ci-cd-workflow-yaml.png) |
+| ![Form Rilis Baru](screenshot/github-new-release.png) | ![Publikasi Rilis Resmi](screenshot/github-published-release.png) |
+
+| Peringatan GitHub Secret Scanning (`Google API Key`) | Arsitektur Pipeline CI/CD (`flutter-ci.yml`) |
+|:---:|:---:|
+| ![GitHub Secret Scanning](screenshot/github-secret-scanning.png) | ![CI/CD Workflow YAML](screenshot/ci-cd-workflow-yaml.png) |
+
+| Verifikasi Format & Test Suite Lokal | Laporan Cakupan Kode Lokal (`lcov.info`) |
+|:---:|:---:|
+| ![Local Verification Tests](screenshot/local-verification-tests.png) | ![Code Coverage](screenshot/ci-cd-workflow-yaml.png) |
 
 ---
 
@@ -308,27 +325,6 @@ Alur kerja otomatis **`Flutter CI`** telah sukses dieksekusi di runner GitHub Ac
 > 2. **Pengujian Fungsional pada Perangkat Fisik Beragam (*Field Testing*)**: Interaksi hardware nyata seperti kamera untuk OCR, mikrofon untuk STT, performa thermal saat penggunaan intensif, konsumsi baterai, dan transisi koneksi internet yang tidak stabil (3G/4G/Airplane mode) memerlukan pengujian manual oleh tim QA.
 > 3. **Persetujuan Rilis & Manajemen Kredensial Produksi (*Release Approval Gate*)**: Keputusan meluncurkan aplikasi ke Google Play Store (termasuk persentase *staged rollout* 10%, 50%, 100%) dan pengesahan *release notes* memerlukan persetujuan Product Owner/Lead Developer guna memitigasi dampak jika terjadi insiden darurat.
 > 4. **Kepatuhan Privasi & Regulasi (*App Store Policy Compliance*)**: Memastikan dokumen kebijakan privasi (*Privacy Policy*), izin akses runtime (kamera/audio), dan deklarasi konten anak/keamanan data Google Play telah sesuai dengan regulasi terbaru.
-
-### 4. Pemeriksaan mana yang paling cepat menemukan masalah?
-> **Jawaban**:  
-> Pemeriksaan yang paling cepat mendeteksi masalah adalah **`dart format`** (hanya memerlukan waktu ~0.3 detik di lokal atau 4 detik di runner) dan **`flutter analyze`** (~7 detik di runner).  
-> Keduanya merupakan jenis analisis statis (*static checks*) yang bekerja langsung pada struktur sintaksis dan teks kode tanpa perlu menginisialisasi simulator, merender widget, atau mengompilasi binary native Android. Pemeriksaan ini menerapkan prinsip *fail-fast*: jika ada ketidaksesuaian format, typo sintaks, atau variabel tak terpakai, pipeline langsung digagalkan sedini mungkin sebelum menghabiskan waktu dan kuota komputasi runner untuk pengujian otomatis (13 detik) apalagi kompilasi Gradle build yang memakan waktu hampir 4 menit.
-
-### 5. Siapa yang dapat mengakses artefak dan secrets workflow?
-> **Jawaban**:  
-> * **Akses Artefak (`android-builds` / APK & AAB)**:  
->   Artefak disimpan di infrastruktur GitHub Actions selama masa retensi (7 hari). Siapa saja yang memiliki izin baca (*Read/View permission*) ke repositori dapat mengunduh zip artefak tersebut dari halaman ringkasan alur kerja. Pada repositori publik, publik umum dapat mengunduhnya; sedangkan pada repositori privat, hanya anggota tim/kolaborator repositori yang dapat mengaksesnya.  
-> * **Akses Secrets Workflow (GitHub Actions Secrets)**:  
->   Hanya pemilik repositori (*Repository Owner*) dan pengguna dengan peran *Admin* yang dapat membuat, mengubah, atau menghapus secret. Nilai rahasia dienkripsi secara ketat dan **bahkan admin sekalipun tidak dapat membaca kembali isinya** setelah disimpan. Runner alur kerja hanya dapat mengakses nilai tersebut secara sementara di memori proses melalui variabel `${{ secrets.NAMA_SECRET }}`. Selain itu, alur kerja yang dipicu oleh *pull request* dari branch fork pihak ketiga secara otomatis **diblokir dan tidak diberikan akses ke secrets repositori** demi mencegah pencurian kredensial (*secret leakage*).
-
-### 6. Apakah build Anda siap rilis, atau baru berhasil dikompilasi?
-> **Jawaban**:  
-> Build yang dihasilkan saat ini **baru sebatas berhasil dikompilasi (*compiled release build*), dan BELUM siap dirilis ke pengguna umum (*not production-ready*)**.  
-> Alasannya:
-> 1. **Kredensial Penandatanganan (Signing Key)**: Paket APK dan AAB saat ini masih ditandatangani menggunakan *debug key* bawaan (`signingConfig = signingConfigs.getByName("debug")`), bukan menggunakan *Production Keystore* resmi milik pengembang/organisasi. Google Play Store akan menolak berkas AAB yang ditandatangani dengan kunci debug.
-> 2. **Proteksi Kode Sumber (Obfuscation & Shrinking)**: Perintah kompilasi belum mengaktifkan flag proteksi kode (`--obfuscate --split-debug-info`), sehingga logika bisnis di dalam aplikasi masih rentan terhadap teknik *reverse engineering*.
-> 3. **Pengujian pada Perangkat Fisik Nyata**: Binary baru diuji di lingkungan runner virtual Linux (headless), belum diuji langsung (*smoke testing* / *field testing*) pada perangkat fisik Android beragam untuk memverifikasi fitur kamera OCR, mikrofon STT, dan notifikasi FCM.
-> 4. **Kelengkapan Dokumen & Kebijakan Google Play**: Belum ada konfigurasi *release track* (Internal/Alpha/Beta), persetujuan *release notes*, dan kepatuhan terhadap kebijakan privasi Google Play Console.
 
 ---
 
